@@ -13,5 +13,6 @@ MPBox-v*.zip
 .idea/
 .vscode/
 
-# Claude session artifacts
-.claude/tasks/
+# Agent tool configs (Claude Code, Codex, etc.)
+.claude/
+.agents/
