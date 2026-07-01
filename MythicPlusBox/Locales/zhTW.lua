@@ -1,0 +1,85 @@
+local L = LibStub("AceLocale-3.0"):NewLocale("MythicPlusBox", "zhTW", false, true)
+if not L then return end
+
+-- UI
+L["ADDON_TITLE"]              = "大祕境工具箱"
+L["TAB_GENERAL"]              = "一般"
+L["TAB_SCORE"]                = "副本分數"
+L["TAB_WEEKLY"]               = "本週面板"
+L["TAB_TELEPORT"]             = "副本傳送"
+L["TAB_KEYSTONE"]             = "鑰石面板"
+L["TAB_PROFILES"]             = "設定檔"
+
+L["OPT_ENABLED"]              = "啟用"
+L["OPT_LOCKED"]               = "鎖定"
+L["OPT_UNLOCK_FRAMES"]        = "解鎖視窗(拖曳以移動)"
+L["OPT_FONT"]                 = "字型"
+L["OPT_FONT_SIZE"]            = "字型大小"
+L["OPT_FONT_OUTLINE"]         = "字型描邊"
+L["OPT_ROW_SPACING"]          = "行距"
+L["OPT_MINIMAP_ICON"]         = "顯示小地圖按鈕"
+L["OPT_USE_ABBREVIATION"]     = "使用副本簡稱"
+L["OPT_USE_MODIFIER"]         = "按住 Alt/Shift/Ctrl 切換本週/賽季"
+L["OPT_ANNOUNCE_ENABLED"]     = "施放傳送法術時向隊伍/團隊廣播"
+L["OPT_ANNOUNCE_TEMPLATE"]    = "廣播範本"
+L["OPT_ANNOUNCE_HELP"]        = "佔位符:{spell} = 法術連結,{dungeon} = 副本名"
+L["OPT_RESET"]                = "恢復預設"
+L["OPT_ANCHOR_POINT"]         = "錨點"
+L["OPT_X_OFFSET"]             = "X 位移"
+L["OPT_Y_OFFSET"]             = "Y 位移"
+L["OPT_BANNER_DURATION"]      = "橫幅顯示時間(秒)"
+L["OPT_SHOW_OFFLINE"]         = "顯示無鑰石的隊員"
+L["OPT_KEYSTONE_LIST"]        = "隊伍鑰石列表"
+L["OPT_CENTER_BANNER"]        = "副本內鑰石橫幅"
+L["OPT_OUTLINE_NONE"]         = "無"
+L["OPT_OUTLINE_THIN"]         = "細"
+L["OPT_OUTLINE_THICK"]        = "粗"
+L["OPT_OUTLINE_MONOCHROME"]   = "單色"
+
+L["ANCHOR_CENTER"]            = "置中"
+L["ANCHOR_LEFT"]              = "左"
+L["ANCHOR_RIGHT"]             = "右"
+L["ANCHOR_TOP"]               = "上"
+L["ANCHOR_BOTTOM"]            = "下"
+L["ANCHOR_TOPLEFT"]           = "左上"
+L["ANCHOR_TOPRIGHT"]          = "右上"
+L["ANCHOR_BOTTOMLEFT"]        = "左下"
+L["ANCHOR_BOTTOMRIGHT"]       = "右下"
+
+-- Weekly
+L["WEEKLY_BEST_HEADER"]       = "本週最佳"
+L["SEASON_RECORD_HEADER"]     = "賽季記錄"
+L["COMPLETION_COUNT_LABEL"]   = "完成次數:"
+L["NO_WEEKLY_RECORD"]         = "無本週記錄"
+L["NO_SEASON_RECORD"]         = "無賽季記錄"
+L["NO_RECORD"]                = "無記錄"
+L["ITEM_LEVEL"]               = "裝等"
+
+-- Teleport
+L["TELEPORT_TEMPLATE_DEFAULT"] = "[MPBox] 正在施放:%s,傳送到:%s"
+L["TELEPORT_TOOLTIP_TITLE"]    = "傳送到副本"
+L["TELEPORT_UNKNOWN_COOLDOWN"] = "未知冷卻"
+L["TELEPORT_READY"]            = "已就緒"
+L["TELEPORT_NOT_LEARNED"]      = "未學會"
+L["TELEPORT_UNKNOWN_DUNGEON"]  = "未知副本"
+
+-- Keystone
+L["KEYSTONE_LIST_HEADER"]      = "隊伍鑰石"
+L["KEYSTONE_NONE"]             = "無鑰石"
+L["KEYSTONE_BANNER_FORMAT"]    = "%s 的鑰石:%s +%d"
+L["KEYSTONE_NO_PARTY"]         = "未組隊"
+
+-- Errors
+L["ERROR_NO_CHALLENGES_UI"]    = "Blizzard_ChallengesUI 載入失敗"
+L["ERROR_NO_LIBOPENRAID"]      = "LibOpenRaid 不可用,隊伍鑰石無法同步"
+L["UNKNOWN"]                   = "未知"
+
+-- Abbreviations (Midnight S1 current-season 8)
+L["ABBR_239"]  = "執政"
+L["ABBR_556"]  = "礦坑"
+L["ABBR_161"]  = "通天"
+L["ABBR_402"]  = "學院"
+L["ABBR_557"]  = "風行"
+L["ABBR_558"]  = "平台"
+L["ABBR_560"]  = "洞窟"
+L["ABBR_559"]  = "節點"

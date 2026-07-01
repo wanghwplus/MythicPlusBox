@@ -1,0 +1,16 @@
+# Reference addons — kept locally for study, not shipped
+zMPlus/
+Stats/
+Details/
+
+# Release artifacts
+MPBox-v*.zip
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Claude session artifacts
+.claude/tasks/

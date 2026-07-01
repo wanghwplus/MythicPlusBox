@@ -1,0 +1,42 @@
+## Interface: 120000, 120005, 120007
+## Title: MythicPlusBox
+## Notes: All-in-one Mythic+ HUD: dungeon overlays, weekly best, teleport, party keystone tracker.
+## Notes-zhCN: 大秘境一站式面板:副本得分、每周最佳、传送、队伍钥石追踪。
+## Notes-zhTW: 大秘境一站式面板:副本分數、每週最佳、傳送、隊伍鑰石追蹤。
+## Author: wanghwplus
+## Version: 0.1.0
+## X-Flavor: Retail
+## X-License: GPL-2.0-or-later
+## SavedVariables: MythicPlusBoxDB
+## IconTexture: Interface\AddOns\MythicPlusBox\Media\icon
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libs\LibDualSpec-1.0\LibDualSpec-1.0.lua
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0.xml
+Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
+Libs\LibSharedMedia-3.0\lib.xml
+Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
+Libs\LibOpenRaid\LibOpenRaid.toc
+
+Locales\enUS.lua
+Locales\zhCN.lua
+Locales\zhTW.lua
+
+Data\Seasons.lua
+
+Init.lua
+Config.lua
+
+Modules\Score.lua
+Modules\Weekly.lua
+Modules\Teleport.lua
+Modules\KeystoneList.lua
+Modules\CenterBanner.lua
+
+Options.lua
