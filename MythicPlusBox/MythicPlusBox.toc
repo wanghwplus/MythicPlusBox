@@ -4,7 +4,7 @@
 ## Notes-zhCN: 大秘境一站式面板:副本得分、每周最佳、传送、队伍钥石追踪。
 ## Notes-zhTW: 大秘境一站式面板:副本分數、每週最佳、傳送、隊伍鑰石追蹤。
 ## Author: wanghwplus
-## Version: 0.1.0
+## Version: 1.0.0
 ## X-Flavor: Retail
 ## X-License: GPL-2.0-or-later
 ## SavedVariables: MythicPlusBoxDB

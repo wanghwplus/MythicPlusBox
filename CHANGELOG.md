@@ -1,11 +1,11 @@
 # Changelog
 
-## v0.1.0
+## v1.0.0
 
-- Initial release. Ported zMPlus's score overlay, weekly/season panel and
-  teleport announce into a modular Ace3 addon. Added party keystone list,
-  in-dungeon center banner, AceGUI settings panel and full i18n (enUS, zhCN,
-  zhTW).
-- 首个版本。将 zMPlus 的副本得分、每周/赛季面板与传送广播迁移到基于 Ace3 的
-  模块化插件中。新增队伍钥石列表、副本内中央横幅、AceGUI 设置面板与完整
-  多语言(英文、简体中文、繁体中文)。
+- First public release. Ships the score overlay, weekly/season history panel,
+  teleport announce, party keystone list and in-dungeon center banner in one
+  addon, with a full AceGUI settings panel and localisation for enUS, zhCN
+  and zhTW.
+- 首个公开版本。将副本得分覆盖、每周/赛季记录面板、传送广播、队伍钥石列表
+  与副本内中央钥石横幅整合到同一插件,提供完整的 AceGUI 设置面板与
+  英文、简体中文、繁体中文本地化。

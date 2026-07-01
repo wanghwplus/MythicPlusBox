@@ -1,8 +1,8 @@
 # MythicPlusBox
 
 All-in-one Mythic+ HUD for World of Warcraft Retail. Bundles the dungeon-score
-overlay, weekly/season history panel, one-click dungeon teleport buttons, and
-a live party keystone tracker into one addon with a proper settings UI and
+overlay, weekly/season history panel, one-click dungeon teleport buttons and
+a live party keystone tracker into one addon with a full settings UI and
 localisation.
 
 ## Features
@@ -16,17 +16,16 @@ localisation.
   button. Optionally announces the cast to party or instance chat with a fully
   editable template (`{spell}`, `{dungeon}` placeholders).
 - **Party keystone list** — a movable panel on the left of the screen showing
-  every party member's keystone (level, dungeon abbreviation). Data flows
-  through LibOpenRaid so it interoperates with Details!, WeakAuras, OmniCD, etc.
+  every party member's keystone (level, dungeon abbreviation).
 - **In-dungeon center banner** — the moment a Mythic+ run starts, a short
   banner in the middle of the screen announces the key holder + dungeon +
   level, then fades out.
 - **Full localisation** — English, Simplified Chinese, Traditional Chinese.
   Dungeon abbreviations toggle on/off; the abbreviations themselves are
   localised.
-- **Settings UI** — modelled on Stats+: AceGUI TabGroup with General / Score
-  Overlay / Weekly Panel / Teleport / Keystone Panels / Profiles. LibDualSpec
-  profile support.
+- **Settings UI** — AceGUI TabGroup with General / Score Overlay / Weekly
+  Panel / Teleport / Keystone Panels / Profiles tabs. LibDualSpec profile
+  support.
 
 ## Slash commands
 
@@ -39,13 +38,9 @@ localisation.
 
 ## Installation
 
-Extract the `MythicPlusBox` folder into `World of Warcraft/_retail_/Interface/AddOns/`.
-Restart the client (or `/reload`).
-
-## For developers
-
-See `CLAUDE.md` for the project layout, coding conventions, and the release
-workflow.
+Extract the `MythicPlusBox` folder into
+`World of Warcraft/_retail_/Interface/AddOns/`. Restart the client or
+`/reload`.
 
 ---
 
@@ -63,12 +58,12 @@ workflow.
 - **副本传送按钮** — 每个副本图标变成安全传送按钮。可选择向队伍/团队广播
   施放的传送法术,广播模板可自定义(`{spell}`、`{dungeon}` 占位符)。
 - **队伍钥石列表** — 屏幕左侧可移动的面板,显示队伍中每位成员的钥石(层数、
-  副本缩写)。基于 LibOpenRaid,与 Details!、WeakAuras、OmniCD 等插件互通。
+  副本缩写)。
 - **副本内中央横幅** — 大秘境副本开启时,屏幕中央出现短暂横幅,显示钥石
   持有人、副本、层数,随后自动淡出。
 - **完整多语言** — 英文、简体中文、繁体中文。副本名可切换缩略/全名显示。
-- **设置面板** — 参考 Stats+ 设计的 AceGUI TabGroup:常规、副本得分、
-  本周面板、副本传送、钥石面板、配置文件。支持 LibDualSpec 双专精配置。
+- **设置面板** — AceGUI TabGroup:常规、副本得分、本周面板、副本传送、
+  钥石面板、配置文件。支持 LibDualSpec 双专精配置。
 
 ## 斜杠命令
 
