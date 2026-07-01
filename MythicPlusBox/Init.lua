@@ -18,8 +18,10 @@ function ns:GetFont(fontDesc)
     local fontName = (fontDesc and fontDesc.name) or self.db.profile.font.name
     local size     = (fontDesc and fontDesc.size) or self.db.profile.font.size
     local outline  = (fontDesc and fontDesc.outline) or self.db.profile.font.outline
-    local path = LSM:Fetch("font", fontName) or LSM:Fetch("font", BUNDLED_FONT_NAME)
-    return path, size, outline
+    local path = LSM:Fetch("font", fontName)
+              or LSM:Fetch("font", BUNDLED_FONT_NAME)
+              or STANDARD_TEXT_FONT
+    return path, size or 12, outline or ""
 end
 
 function ns:RegisterModule(id, mod)

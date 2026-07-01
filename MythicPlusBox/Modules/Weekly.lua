@@ -29,7 +29,7 @@ end
 
 local function GetRow(index)
     if M.rows[index] then return M.rows[index] end
-    local fs = M.frame:CreateFontString(nil, "OVERLAY")
+    local fs = M.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     fs:SetJustifyH("LEFT")
     M.rows[index] = fs
     return fs

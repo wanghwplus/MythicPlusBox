@@ -32,7 +32,7 @@ local function EnsureFrame()
         anchor.y             = y
     end)
 
-    f.text = f:CreateFontString(nil, "OVERLAY")
+    f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     f.text:SetAllPoints(f)
     f.text:SetJustifyH("CENTER")
     f.text:SetJustifyV("MIDDLE")

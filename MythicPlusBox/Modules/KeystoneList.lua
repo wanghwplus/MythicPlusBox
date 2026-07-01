@@ -78,7 +78,7 @@ local function GetRow(index)
     if M.rows[index] then return M.rows[index] end
     local row = CreateFrame("Frame", nil, M.frame)
     row:SetHeight(16)
-    row.text = row:CreateFontString(nil, "OVERLAY")
+    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     row.text:SetAllPoints(row)
     row.text:SetJustifyH("LEFT")
     M.rows[index] = row
