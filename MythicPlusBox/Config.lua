@@ -82,8 +82,15 @@ function ns:InitializeDB()
 
     local L = self.L
     if L then
-        if self.db.profile.teleport.announceTemplate == nil then
-            self.db.profile.teleport.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
+        local tp = self.db.profile.teleport
+        if tp.announceTemplate == nil then
+            tp.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
+        elseif type(tp.announceTemplate) == "string" then
+            -- One-shot migration: strip legacy "[MPBox] " prefix from saved templates.
+            local cleaned = tp.announceTemplate:gsub("^%s*%[MPBox%]%s*", "")
+            if cleaned ~= tp.announceTemplate then
+                tp.announceTemplate = cleaned
+            end
         end
     end
 end

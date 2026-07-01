@@ -12,7 +12,7 @@ L["TAB_PROFILES"]             = "配置文件"
 
 L["OPT_ENABLED"]              = "启用"
 L["OPT_LOCKED"]               = "锁定"
-L["OPT_UNLOCK_FRAMES"]        = "解锁窗口(拖动以移动)"
+L["OPT_UNLOCK_FRAMES"]        = "解锁(拖动以移动本面板)"
 L["OPT_FONT"]                 = "字体"
 L["OPT_FONT_SIZE"]            = "字号"
 L["OPT_FONT_OUTLINE"]         = "字体描边"
@@ -56,7 +56,7 @@ L["NO_RECORD"]                = "无记录"
 L["ITEM_LEVEL"]               = "装等"
 
 -- Teleport
-L["TELEPORT_TEMPLATE_DEFAULT"] = "[MPBox] 正在施放:%s,传送到:%s"
+L["TELEPORT_TEMPLATE_DEFAULT"] = "正在施放:%s,传送到:%s"
 L["TELEPORT_TOOLTIP_TITLE"]    = "传送到副本"
 L["TELEPORT_UNKNOWN_COOLDOWN"] = "未知冷却"
 L["TELEPORT_READY"]            = "已准备好"

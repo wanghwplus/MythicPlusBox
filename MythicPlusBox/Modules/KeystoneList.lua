@@ -91,36 +91,55 @@ local function HideExtraRows(fromIndex)
     end
 end
 
+local function PartyUnitIDs()
+    local ids = { "player" }
+    if IsInGroup(LE_PARTY_CATEGORY_HOME) and not IsInRaid() then
+        for i = 1, GetNumSubgroupMembers() do
+            local unit = "party" .. i
+            if UnitExists(unit) then table.insert(ids, unit) end
+        end
+    end
+    return ids
+end
+
+local function KeystoneForUnit(lib, unitId)
+    if unitId == "player" then
+        local _, _, classID = UnitClass("player")
+        return {
+            level          = C_MythicPlus.GetOwnedKeystoneLevel() or 0,
+            challengeMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID() or 0,
+            classID        = classID,
+        }
+    end
+    if lib and lib.GetKeystoneInfo then
+        local info = lib.GetKeystoneInfo(unitId)
+        if info then
+            return {
+                level          = info.level or 0,
+                challengeMapID = info.challengeMapID or info.mapID or 0,
+                classID        = info.classID,
+                rating         = info.rating,
+            }
+        end
+    end
+    local _, _, classID = UnitClass(unitId)
+    return { level = 0, challengeMapID = 0, classID = classID }
+end
+
 local function CollectPartyKeystones()
     local result = {}
     local lib = GetLibOpenRaid()
-    if lib and lib.GetAllKeystonesInfo then
-        local all = lib.GetAllKeystonesInfo() or {}
-        for unitName, info in pairs(all) do
-            if info and info.level and info.level > 0 then
-                table.insert(result, {
-                    unitName      = unitName,
-                    level         = info.level,
-                    challengeMapID = info.challengeMapID or info.mapID,
-                    classID       = info.classID,
-                    rating        = info.rating,
-                })
-            elseif ns.db.profile.keystoneList.showOffline then
-                table.insert(result, {
-                    unitName = unitName, level = 0, challengeMapID = 0,
-                    classID = info and info.classID, rating = info and info.rating,
-                })
-            end
-        end
-    else
-        -- Fallback: at least surface the local player.
-        local level = C_MythicPlus.GetOwnedKeystoneLevel() or 0
-        local mapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID() or 0
-        if level > 0 or ns.db.profile.keystoneList.showOffline then
-            local _, _, classID = UnitClass("player")
+    local showOffline = ns.db.profile.keystoneList.showOffline
+    for _, unitId in ipairs(PartyUnitIDs()) do
+        local info = KeystoneForUnit(lib, unitId)
+        if info.level > 0 or showOffline then
             table.insert(result, {
-                unitName = UnitName("player"), level = level,
-                challengeMapID = mapID, classID = classID,
+                unitName       = UnitName(unitId) or unitId,
+                level          = info.level,
+                challengeMapID = info.challengeMapID,
+                classID        = info.classID,
+                rating         = info.rating,
+                isPlayer       = (unitId == "player"),
             })
         end
     end
@@ -188,10 +207,18 @@ local function LayoutRows()
     M.frame:SetHeight((rowH + cfg.rowSpacing) * (#list + 1) + 12)
 end
 
+local function ShouldShow(cfg)
+    if not cfg.enabled then return false end
+    if not IsInGroup(LE_PARTY_CATEGORY_HOME) then return false end
+    if IsInRaid() then return false end
+    if M.inActiveRun then return false end
+    return true
+end
+
 function M:Refresh()
     if not self.frame then return end
     local cfg = ns.db.profile.keystoneList
-    if not cfg.enabled then self.frame:Hide(); return end
+    if not ShouldShow(cfg) then self.frame:Hide(); return end
     self.frame:Show()
     self.frame:EnableMouse(not cfg.locked)
     self:ApplyAnchor()
@@ -213,8 +240,17 @@ function M:OnPlayerLogin()
     f:RegisterEvent("GROUP_ROSTER_UPDATE")
     f:RegisterEvent("BAG_UPDATE_DELAYED")
     f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:RegisterEvent("CHALLENGE_MODE_START")
+    f:RegisterEvent("CHALLENGE_MODE_COMPLETED")
+    f:RegisterEvent("CHALLENGE_MODE_RESET")
     f:SetScript("OnEvent", function(_, event)
-        if event == "GROUP_ROSTER_UPDATE" then
+        if event == "CHALLENGE_MODE_START" then
+            M.inActiveRun = true
+            M:Refresh()
+        elseif event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
+            M.inActiveRun = false
+            M:Refresh()
+        elseif event == "GROUP_ROSTER_UPDATE" then
             C_Timer.After(1, function()
                 local l = GetLibOpenRaid()
                 if l and l.RequestKeystoneDataFromParty then
@@ -222,6 +258,12 @@ function M:OnPlayerLogin()
                 end
                 M:Refresh()
             end)
+        elseif event == "PLAYER_ENTERING_WORLD" then
+            local _, instanceType = GetInstanceInfo()
+            local activeLevel = C_ChallengeMode and C_ChallengeMode.GetActiveKeystoneInfo
+                                and C_ChallengeMode.GetActiveKeystoneInfo() or 0
+            M.inActiveRun = (instanceType == "party" and activeLevel > 0) or false
+            M:Refresh()
         else
             M:Refresh()
         end

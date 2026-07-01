@@ -260,20 +260,16 @@ end
 
 local function DrawKeystoneTab(container)
     local L, db = ns.L, ns.db.profile
-    AddSeparator(container, L["TAB_KEYSTONE"])
-
-    AddCheckbox(container, L["OPT_UNLOCK_FRAMES"],
-        function() return (not db.keystoneList.locked) or (not db.centerBanner.locked) end,
-        function(v)
-            db.keystoneList.locked = not v
-            db.centerBanner.locked = not v
-        end)
 
     AddSeparator(container, L["OPT_KEYSTONE_LIST"])
 
     AddCheckbox(container, L["OPT_ENABLED"],
         function() return db.keystoneList.enabled end,
         function(v) db.keystoneList.enabled = v end)
+
+    AddCheckbox(container, L["OPT_UNLOCK_FRAMES"],
+        function() return not db.keystoneList.locked end,
+        function(v) db.keystoneList.locked = not v end)
 
     AddCheckbox(container, L["OPT_SHOW_OFFLINE"],
         function() return db.keystoneList.showOffline end,
@@ -298,6 +294,10 @@ local function DrawKeystoneTab(container)
     AddCheckbox(container, L["OPT_ENABLED"],
         function() return db.centerBanner.enabled end,
         function(v) db.centerBanner.enabled = v end)
+
+    AddCheckbox(container, L["OPT_UNLOCK_FRAMES"],
+        function() return not db.centerBanner.locked end,
+        function(v) db.centerBanner.locked = not v end)
 
     AddLSMFontDropdown(container, L["OPT_FONT"],
         function() return db.centerBanner.font.name end,

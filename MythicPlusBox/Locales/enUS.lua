@@ -14,7 +14,7 @@ L["TAB_PROFILES"]             = "Profiles"
 
 L["OPT_ENABLED"]              = "Enabled"
 L["OPT_LOCKED"]               = "Locked"
-L["OPT_UNLOCK_FRAMES"]        = "Unlock frames (drag to reposition)"
+L["OPT_UNLOCK_FRAMES"]        = "Unlock (drag to move this panel)"
 L["OPT_FONT"]                 = "Font"
 L["OPT_FONT_SIZE"]            = "Font size"
 L["OPT_FONT_OUTLINE"]         = "Font outline"
@@ -62,7 +62,7 @@ L["ITEM_LEVEL"]               = "ilvl"
 -- ============================================================================
 -- Teleport
 -- ============================================================================
-L["TELEPORT_TEMPLATE_DEFAULT"] = "[MPBox] Casting %s, teleporting to %s"
+L["TELEPORT_TEMPLATE_DEFAULT"] = "Casting %s, teleporting to %s"
 L["TELEPORT_TOOLTIP_TITLE"]    = "Teleport to dungeon"
 L["TELEPORT_UNKNOWN_COOLDOWN"] = "Unknown cooldown"
 L["TELEPORT_READY"]            = "Ready"
