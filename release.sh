@@ -41,6 +41,7 @@ rsync -a \
     --exclude 'release.sh' \
     --exclude '*.zip' \
     --exclude '.DS_Store' \
+    --exclude 'Media/*.png' \
     "$SRC/" "$DEST/"
 
 rm -f "$ROOT/$ZIP"
