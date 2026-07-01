@@ -74,6 +74,15 @@ function M:ApplyAnchor()
     self.frame:SetPoint(a.point, relTo, a.relativePoint, a.x, a.y)
 end
 
+local function CurrentFont()
+    local cfg = ns.db.profile.keystoneList
+    return ns:GetFont({
+        name    = cfg.font.name,
+        size    = cfg.font.size,
+        outline = ns.db.profile.font.outline,
+    })
+end
+
 local function GetRow(index)
     if M.rows[index] then return M.rows[index] end
     local row = CreateFrame("Frame", nil, M.frame)
@@ -81,6 +90,8 @@ local function GetRow(index)
     row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     row.text:SetAllPoints(row)
     row.text:SetJustifyH("LEFT")
+    -- Belt-and-suspenders: guarantee font before any SetText can run.
+    row.text:SetFont(CurrentFont())
     M.rows[index] = row
     return row
 end

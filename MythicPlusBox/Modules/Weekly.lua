@@ -27,10 +27,23 @@ local function LevelColor(level)
     return colors[idx] or colors[0]
 end
 
+local function CurrentFont()
+    local weekly = ns.db.profile.weekly
+    return ns:GetFont({
+        name    = weekly.font.name,
+        size    = weekly.font.size,
+        outline = ns.db.profile.font.outline,
+    })
+end
+
 local function GetRow(index)
     if M.rows[index] then return M.rows[index] end
     local fs = M.frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     fs:SetJustifyH("LEFT")
+    -- Belt-and-suspenders: guarantee the FontString has a valid font before
+    -- any SetText can run, even if the template lookup silently returned no
+    -- font. Prevents "SetText(): Font not set" from ClearRows/EmitRow.
+    fs:SetFont(CurrentFont())
     M.rows[index] = fs
     return fs
 end
@@ -45,8 +58,7 @@ end
 
 local function LayoutRow(row, index)
     local weekly = ns.db.profile.weekly
-    local path, size, outline = ns:GetFont({ name = weekly.font.name, size = weekly.font.size, outline = ns.db.profile.font.outline })
-    row:SetFont(path, size, outline)
+    row:SetFont(CurrentFont())
     row:Show()
     if index == 1 then
         row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", 0, 0)
@@ -57,8 +69,8 @@ end
 
 local function EmitRow(index, text)
     local row = GetRow(index)
-    row:SetText(text)
     LayoutRow(row, index)
+    row:SetText(text)
     return index + 1
 end
 
@@ -66,11 +78,17 @@ local function EnsureFrame()
     if M.frame then return M.frame end
     if not PVEFrame then return nil end
     local weekly = ns.db.profile.weekly
-    local f = CreateFrame("Frame", "MythicPlusBoxWeeklyFrame", PVEFrame)
+    -- Parent to UIParent (not PVEFrame) to avoid tainting a secure frame's
+    -- descendant tree from addon code. Follow PVEFrame's visibility via
+    -- HookScript instead.
+    local f = CreateFrame("Frame", "MythicPlusBoxWeeklyFrame", UIParent)
     f:SetSize(330, 220)
     local a = weekly.anchor
     local relTo = _G[a.relativeTo] or PVEFrame
     f:SetPoint(a.point, relTo, a.relativePoint, a.x, a.y)
+    if not PVEFrame:IsShown() then f:Hide() end
+    PVEFrame:HookScript("OnShow", function() if weekly.enabled then f:Show(); M:Update() end end)
+    PVEFrame:HookScript("OnHide", function() f:Hide() end)
     M.frame = f
     return f
 end

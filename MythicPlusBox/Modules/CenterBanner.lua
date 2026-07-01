@@ -36,6 +36,13 @@ local function EnsureFrame()
     f.text:SetAllPoints(f)
     f.text:SetJustifyH("CENTER")
     f.text:SetJustifyV("MIDDLE")
+    -- Belt-and-suspenders: guarantee font before any SetText can run.
+    local cfg = ns.db.profile.centerBanner
+    f.text:SetFont(ns:GetFont({
+        name    = cfg.font.name,
+        size    = cfg.font.size,
+        outline = ns.db.profile.font.outline,
+    }))
 
     M.frame = f
     M:ApplyAnchor()
