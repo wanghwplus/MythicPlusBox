@@ -433,6 +433,7 @@ function ns:OpenOptions()
         ns:RefreshAll()
         AceGUI:Release(widget)
         ns._optionsFrame = nil
+        ns._optionsTab   = nil
     end)
     self._optionsFrame = f
 
@@ -453,6 +454,16 @@ function ns:OpenOptions()
     end)
     tab:SelectTab("general")
     f:AddChild(tab)
+    self._optionsTab = tab
+end
+
+-- Called from modules whose framed anchor changed at runtime (drag, lock
+-- toggle) so the X/Y sliders in the currently visible tab pick up the new
+-- values instead of showing stale ones from when the tab was built.
+function ns:RefreshOptionsUI()
+    local tab = self._optionsTab
+    if not tab or not tab.status or not tab.status.selected then return end
+    tab:SelectTab(tab.status.selected)
 end
 
 -- ==========================================================================

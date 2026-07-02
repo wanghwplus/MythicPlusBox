@@ -59,6 +59,7 @@ local function EnsureFrame()
         anchor.relativePoint = relativePoint
         anchor.x             = x
         anchor.y             = y
+        if ns.RefreshOptionsUI then ns:RefreshOptionsUI() end
     end)
 
     f:SetBackdrop({
