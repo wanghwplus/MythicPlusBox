@@ -38,7 +38,7 @@ L["OPT_Y_OFFSET"]             = "Y 位移"
 L["OPT_BANNER_DURATION"]      = "橫幅顯示時間(秒)"
 L["OPT_SHOW_OFFLINE"]         = "顯示無鑰石的隊員"
 L["OPT_KEYSTONE_LIST"]        = "隊伍鑰石列表"
-L["OPT_CENTER_BANNER"]        = "誰有鑰石列表"
+L["OPT_CENTER_BANNER"]        = "誰有鑰石"
 L["OPT_OUTLINE_NONE"]         = "無"
 L["OPT_OUTLINE_THIN"]         = "細"
 L["OPT_OUTLINE_THICK"]        = "粗"
@@ -85,7 +85,7 @@ L["UNKNOWN"]                   = "未知"
 -- Abbreviations (mapID -> short name, sourced from SavedInstances zhTW;
 -- gaps filled with our own Traditional-Chinese short form)
 -- WotLK
-L["ABBR_556"]  = "礦坑"       -- 薩隆礦坑
+L["ABBR_556"]  = "薩倫"       -- 薩倫礦坑
 -- Cataclysm
 L["ABBR_438"]  = "漩渦"       -- 漩渦頂峰
 L["ABBR_456"]  = "海潮"       -- 海潮王座
@@ -93,7 +93,7 @@ L["ABBR_507"]  = "格瑞"       -- 格瑞姆巴托
 -- Mists of Pandaria
 L["ABBR_2"]    = "玉蛟"       -- 玉蛟寺
 -- Warlords of Draenor
-L["ABBR_161"]  = "通天"       -- 通天峰
+L["ABBR_161"]  = "擎天"       -- 擎天峰
 L["ABBR_165"]  = "影月"
 L["ABBR_166"]  = "車站"
 L["ABBR_168"]  = "永茂"
@@ -161,5 +161,5 @@ L["ABBR_542"]  = "埃達尼秘境" -- 埃達尼秘境
 -- Midnight
 L["ABBR_557"]  = "風行"       -- 風行者尖塔
 L["ABBR_558"]  = "博學"       -- 博學者殿堂
-L["ABBR_559"]  = "節點"       -- 節點核心
-L["ABBR_560"]  = "洞窟"       -- 邁薩拉洞窟
+L["ABBR_559"]  = "奧核"       -- 奧核據點
+L["ABBR_560"]  = "洞穴"       -- 梅薩拉洞穴

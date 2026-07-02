@@ -3,14 +3,43 @@ local addonName, ns = ...
 local M = {}
 ns:RegisterModule("centerBanner", M)
 
+local REFRESH_INTERVAL = 3.0
+local ROW_HEIGHT_PAD   = 6
+local FRAME_PAD        = 10
+
+M.rows = {}
+
 local function GetLibOpenRaid()
     return _G.LibStub and _G.LibStub("LibOpenRaid-1.0", true)
 end
 
+local function ClassColor(classID)
+    if not classID then return { r = 1, g = 1, b = 1 } end
+    local classFile = select(2, GetClassInfo(classID))
+    return classFile and RAID_CLASS_COLORS[classFile] or { r = 1, g = 1, b = 1 }
+end
+
+local function LevelColor(level)
+    local colors = ns.db.profile.colors.levelColors
+    if not level or level <= 0 then return colors[0] end
+    local add = level >= 15 and 1 or 0
+    local idx = math.min(math.floor((math.max(level, 2) - 2) / 2), 5) + add
+    return colors[idx] or colors[0]
+end
+
+local function CurrentFont()
+    local cfg = ns.db.profile.centerBanner
+    return ns:GetFont({
+        name    = cfg.font.name,
+        size    = cfg.font.size,
+        outline = ns.db.profile.font.outline,
+    })
+end
+
 local function EnsureFrame()
     if M.frame then return M.frame end
-    local f = CreateFrame("Frame", "MythicPlusBoxCenterBannerFrame", UIParent)
-    f:SetSize(500, 60)
+    local f = CreateFrame("Frame", "MythicPlusBoxCenterBannerFrame", UIParent, "BackdropTemplate")
+    f:SetSize(260, 80)
     f:SetFrameStrata("HIGH")
     f:SetMovable(true)
     f:EnableMouse(false)
@@ -32,17 +61,13 @@ local function EnsureFrame()
         anchor.y             = y
     end)
 
-    f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.text:SetAllPoints(f)
-    f.text:SetJustifyH("CENTER")
-    f.text:SetJustifyV("MIDDLE")
-    -- Belt-and-suspenders: guarantee font before any SetText can run.
-    local cfg = ns.db.profile.centerBanner
-    f.text:SetFont(ns:GetFont({
-        name    = cfg.font.name,
-        size    = cfg.font.size,
-        outline = ns.db.profile.font.outline,
-    }))
+    f:SetBackdrop({
+        bgFile   = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    f:SetBackdropColor(0, 0, 0, 0.5)
+    f:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
 
     M.frame = f
     M:ApplyAnchor()
@@ -57,110 +82,209 @@ function M:ApplyAnchor()
     self.frame:SetPoint(a.point, relTo, a.relativePoint, a.x, a.y)
 end
 
-local function ResolveHolderAndKey()
-    -- Returns holderName, mapID, level when we can figure out the current run's key.
-    local level, _, _, _, _, mapID
-    if C_ChallengeMode and C_ChallengeMode.GetActiveKeystoneInfo then
-        level = C_ChallengeMode.GetActiveKeystoneInfo()
-    end
-    if C_ChallengeMode and C_ChallengeMode.GetActiveChallengeMapID then
-        mapID = C_ChallengeMode.GetActiveChallengeMapID()
-    end
-    if not mapID or not level or level == 0 then return nil end
+local function GetRow(index)
+    if M.rows[index] then return M.rows[index] end
+    local row = CreateFrame("Frame", nil, M.frame)
+    row:SetHeight(20)
 
-    -- Match holder by comparing everyone's keystone level+challenge map to the active key.
-    local lib = GetLibOpenRaid()
-    if lib and lib.GetAllKeystonesInfo then
-        for unitName, info in pairs(lib.GetAllKeystonesInfo() or {}) do
-            if info and info.level == level and (info.challengeMapID == mapID or info.mapID == mapID) then
-                return unitName, mapID, level
-            end
+    row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    row.text:SetAllPoints(row)
+    row.text:SetJustifyH("CENTER")
+    row.text:SetJustifyV("MIDDLE")
+    row.text:SetFont(CurrentFont())
+
+    M.rows[index] = row
+    return row
+end
+
+local function HideExtraRows(fromIndex)
+    for i = fromIndex, #M.rows do
+        if M.rows[i] then M.rows[i]:Hide() end
+    end
+end
+
+local function PartyUnitIDs()
+    local ids = { "player" }
+    if IsInGroup(LE_PARTY_CATEGORY_HOME) and not IsInRaid() then
+        for i = 1, GetNumSubgroupMembers() do
+            local unit = "party" .. i
+            if UnitExists(unit) then table.insert(ids, unit) end
         end
     end
-    -- Fallback: assume local player.
-    if (C_MythicPlus.GetOwnedKeystoneLevel() or 0) == level
-       and (C_MythicPlus.GetOwnedKeystoneChallengeMapID() or 0) == mapID then
-        return UnitName("player"), mapID, level
-    end
-    return nil, mapID, level
+    return ids
 end
 
-function M:Show()
-    if not ns.db.profile.centerBanner.enabled then return end
-    local f = EnsureFrame()
-    local L = ns.L
+local function KeystoneForUnit(lib, unitId)
+    if unitId == "player" then
+        local _, _, classID = UnitClass("player")
+        return {
+            level          = C_MythicPlus.GetOwnedKeystoneLevel() or 0,
+            challengeMapID = C_MythicPlus.GetOwnedKeystoneChallengeMapID() or 0,
+            classID        = classID,
+        }
+    end
+    if lib and lib.GetKeystoneInfo then
+        local info = lib.GetKeystoneInfo(unitId)
+        if info then
+            return {
+                level          = info.level or 0,
+                challengeMapID = info.challengeMapID or info.mapID or 0,
+                classID        = info.classID,
+            }
+        end
+    end
+    local _, _, classID = UnitClass(unitId)
+    return { level = 0, challengeMapID = 0, classID = classID }
+end
+
+local function ActiveMapID()
+    if C_ChallengeMode and C_ChallengeMode.GetActiveChallengeMapID then
+        return C_ChallengeMode.GetActiveChallengeMapID() or 0
+    end
+    return 0
+end
+
+-- Collect the list of party members whose keystone matches the currently
+-- active dungeon. Unlocked-preview mode always yields the player themselves
+-- (regardless of whether the key matches, or even exists), so the anchor
+-- has something to render outside a live run.
+local function CollectHolders(unlocked)
+    local list = {}
+    local lib  = GetLibOpenRaid()
+
+    if unlocked then
+        local info = KeystoneForUnit(lib, "player")
+        table.insert(list, {
+            unitName = UnitName("player") or "player",
+            level    = info.level,
+            classID  = info.classID,
+        })
+        return list
+    end
+
+    local activeMap = ActiveMapID()
+    if activeMap == 0 then return list end
+
+    for _, unitId in ipairs(PartyUnitIDs()) do
+        local info = KeystoneForUnit(lib, unitId)
+        if info.level > 0 and info.challengeMapID == activeMap then
+            table.insert(list, {
+                unitName = UnitName(unitId) or unitId,
+                level    = info.level,
+                classID  = info.classID,
+            })
+        end
+    end
+    table.sort(list, function(a, b)
+        if a.level ~= b.level then return a.level > b.level end
+        return (a.unitName or "") < (b.unitName or "")
+    end)
+    return list
+end
+
+local function ShouldShow(cfg)
+    if not cfg.enabled then return false end
+    if not cfg.locked then return true end
+    return ActiveMapID() ~= 0
+end
+
+local function LayoutRows()
     local cfg = ns.db.profile.centerBanner
     local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
-    f.text:SetFont(path, size, outline)
+    local rowH = size + ROW_HEIGHT_PAD
+    local gap  = cfg.rowSpacing or 4
 
-    local holder, mapID, level = ResolveHolderAndKey()
-    local dungeonName = ns:GetDungeonName(mapID, false)
-    local holderName  = Ambiguate(holder or L["UNKNOWN"], "short")
-    f.text:SetText(string.format(L["KEYSTONE_BANNER_FORMAT"], holderName, dungeonName, level or 0))
-
-    self:ApplyAnchor()
-    f:EnableMouse(not cfg.locked)
-    f:Show()
-    f:SetAlpha(0)
-    if _G.UIFrameFadeIn then UIFrameFadeIn(f, 0.5, 0, 1) else f:SetAlpha(1) end
-
-    if self._hideTimer then self._hideTimer:Cancel() end
-    self._hideTimer = C_Timer.NewTimer(cfg.duration, function() M:Hide() end)
-end
-
-function M:Hide()
-    if not self.frame then return end
-    if _G.UIFrameFadeOut then
-        UIFrameFadeOut(self.frame, 0.4, self.frame:GetAlpha(), 0)
-        C_Timer.After(0.5, function() if self.frame then self.frame:Hide() end end)
-    else
-        self.frame:Hide()
+    local list = CollectHolders(not cfg.locked)
+    if #list == 0 then
+        HideExtraRows(1)
+        M.frame:SetHeight(rowH + FRAME_PAD * 2)
+        return
     end
+
+    for i, entry in ipairs(list) do
+        local row = GetRow(i)
+        row:ClearAllPoints()
+        if i == 1 then
+            row:SetPoint("TOPLEFT",  M.frame, "TOPLEFT",  FRAME_PAD, -FRAME_PAD)
+            row:SetPoint("TOPRIGHT", M.frame, "TOPRIGHT", -FRAME_PAD, -FRAME_PAD)
+        else
+            row:SetPoint("TOPLEFT",  M.rows[i - 1], "BOTTOMLEFT",  0, -gap)
+            row:SetPoint("TOPRIGHT", M.rows[i - 1], "BOTTOMRIGHT", 0, -gap)
+        end
+        row:SetHeight(rowH)
+        row:Show()
+        row.text:SetFont(path, size, outline)
+
+        local c = ClassColor(entry.classID)
+        local nameStr = string.format("|cff%02x%02x%02x%s|r",
+            c.r * 255, c.g * 255, c.b * 255,
+            Ambiguate(entry.unitName or "?", "short"))
+        local levelStr
+        if entry.level > 0 then
+            levelStr = "|c" .. LevelColor(entry.level) .. "+" .. entry.level .. "|r"
+        else
+            levelStr = "|cff9d9d9d-|r"
+        end
+        row.text:SetText(nameStr .. "        " .. levelStr)
+    end
+
+    HideExtraRows(#list + 1)
+    M.frame:SetHeight(FRAME_PAD * 2 + rowH * #list + gap * math.max(#list - 1, 0))
 end
 
 function M:Refresh()
     if not self.frame then return end
     local cfg = ns.db.profile.centerBanner
+    if not ShouldShow(cfg) then self.frame:Hide(); return end
     self:ApplyAnchor()
     self.frame:EnableMouse(not cfg.locked)
-    if not cfg.enabled then self.frame:Hide(); return end
-
-    local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
-    self.frame.text:SetFont(path, size, outline)
-
-    -- Unlocked-preview mode: show a placeholder so the user can see and drag
-    -- the anchor even outside a live run. Once relocked, hide the preview.
-    if not cfg.locked then
-        local L = ns.L
-        self.frame.text:SetText("|cffffd700" .. (L["OPT_CENTER_BANNER"] or "Center Banner") .. "|r")
-        self.frame:SetAlpha(1)
-        self.frame:Show()
-        if self._hideTimer then self._hideTimer:Cancel(); self._hideTimer = nil end
-    elseif self.frame:IsShown() and not self._hideTimer then
-        -- Frame was previewed while unlocked — hide it now that we're relocked.
-        self.frame:Hide()
-    end
+    self.frame:Show()
+    LayoutRows()
 end
 
 function M:OnPlayerLogin()
     EnsureFrame()
+
+    local lib = GetLibOpenRaid()
+    if lib and lib.RequestKeystoneDataFromParty then
+        lib.RequestKeystoneDataFromParty()
+    end
+    if lib and lib.RegisterCallback then
+        lib.RegisterCallback(M, "KeystoneUpdate", "OnKeystoneUpdate")
+    end
+
     local f = CreateFrame("Frame")
     f:RegisterEvent("CHALLENGE_MODE_START")
     f:RegisterEvent("CHALLENGE_MODE_COMPLETED")
     f:RegisterEvent("CHALLENGE_MODE_RESET")
     f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:RegisterEvent("GROUP_ROSTER_UPDATE")
     f:SetScript("OnEvent", function(_, event)
-        if event == "CHALLENGE_MODE_START" then
-            C_Timer.After(1, function() M:Show() end)
-        elseif event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
-            M:Hide()
-        elseif event == "PLAYER_ENTERING_WORLD" then
-            -- Re-show if we're already inside a live challenge (e.g. /reload mid-run).
-            local _, instanceType, _, _, _, _, _, _, _ = GetInstanceInfo()
-            if instanceType == "party" and C_ChallengeMode
-               and C_ChallengeMode.GetActiveKeystoneInfo and (C_ChallengeMode.GetActiveKeystoneInfo() or 0) > 0 then
-                C_Timer.After(1, function() M:Show() end)
-            end
+        if event == "GROUP_ROSTER_UPDATE" then
+            C_Timer.After(1, function()
+                local l = GetLibOpenRaid()
+                if l and l.RequestKeystoneDataFromParty then
+                    l.RequestKeystoneDataFromParty()
+                end
+                M:Refresh()
+            end)
+        else
+            C_Timer.After(1, function() M:Refresh() end)
         end
     end)
+
+    local accum = 0
+    self.frame:SetScript("OnUpdate", function(_, elapsed)
+        accum = accum + elapsed
+        if accum >= REFRESH_INTERVAL then
+            accum = 0
+            M:Refresh()
+        end
+    end)
+
+    M:Refresh()
+end
+
+function M:OnKeystoneUpdate()
+    M:Refresh()
 end

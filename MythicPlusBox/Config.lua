@@ -34,11 +34,11 @@ local defaults = {
             anchor      = { point = "LEFT", relativeTo = "UIParent", relativePoint = "LEFT", x = 20, y = 0 },
         },
         centerBanner = {
-            enabled  = true,
-            locked   = true,
-            duration = 8,
-            font     = { name = nil, size = 22 },
-            anchor   = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 0, y = 200 },
+            enabled    = true,
+            locked     = true,
+            rowSpacing = 6,
+            font       = { name = nil, size = 18 },
+            anchor     = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 0, y = 200 },
         },
         colors = {
             levelColors = {

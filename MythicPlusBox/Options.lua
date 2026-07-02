@@ -108,6 +108,53 @@ local function AnchorValueTable(L)
     return values
 end
 
+-- Font + Size + RowSpacing on a single row shared by the panel modules.
+local function AddFontRow(container, L, cfgFont, spacingGetter, spacingSetter)
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetFullWidth(true)
+    row:SetLayout("Flow")
+    container:AddChild(row)
+
+    local fonts = LSM:HashTable("font")
+    local order = {}
+    for k in pairs(fonts) do table.insert(order, k) end
+    table.sort(order)
+    local fd = AceGUI:Create("LSM30_Font")
+    fd:SetLabel(L["OPT_FONT"])
+    fd:SetList(fonts, order)
+    fd:SetValue(cfgFont.name or ns.BUNDLED_FONT_NAME)
+    fd:SetRelativeWidth(0.4)
+    fd:SetCallback("OnValueChanged", function(_, _, v)
+        cfgFont.name = v
+        ns:RefreshAll()
+    end)
+    row:AddChild(fd)
+
+    local ss = AceGUI:Create("Slider")
+    ss:SetLabel(L["OPT_FONT_SIZE"])
+    ss:SetSliderValues(8, 32, 1)
+    ss:SetValue(cfgFont.size or 12)
+    ss:SetRelativeWidth(0.3)
+    ss:SetCallback("OnValueChanged", function(_, _, v)
+        cfgFont.size = v
+        ns:RefreshAll()
+    end)
+    row:AddChild(ss)
+
+    if spacingGetter then
+        local rs = AceGUI:Create("Slider")
+        rs:SetLabel(L["OPT_ROW_SPACING"])
+        rs:SetSliderValues(0, 20, 1)
+        rs:SetValue(spacingGetter() or 4)
+        rs:SetRelativeWidth(0.3)
+        rs:SetCallback("OnValueChanged", function(_, _, v)
+            spacingSetter(v)
+            ns:RefreshAll()
+        end)
+        row:AddChild(rs)
+    end
+end
+
 -- ==========================================================================
 -- Position controls (anchor point + relativePoint + x/y sliders) reused
 -- by Weekly, KeystoneList, CenterBanner tabs. x/y share one row.
@@ -268,19 +315,11 @@ local function DrawKeystoneTab(container)
         function() return db.keystoneList.enabled end,
         function(v) db.keystoneList.enabled = v end)
 
-    AddCheckbox(container, L["OPT_UNLOCK_FRAMES"],
-        function() return not db.keystoneList.locked end,
-        function(v) db.keystoneList.locked = not v end)
+    AddCheckbox(container, L["OPT_LOCKED"],
+        function() return db.keystoneList.locked end,
+        function(v) db.keystoneList.locked = v end)
 
-    AddLSMFontDropdown(container, L["OPT_FONT"],
-        function() return db.keystoneList.font.name end,
-        function(v) db.keystoneList.font.name = v end)
-
-    AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
-        function() return db.keystoneList.font.size end,
-        function(v) db.keystoneList.font.size = v end)
-
-    AddSlider(container, L["OPT_ROW_SPACING"], 0, 20, 1,
+    AddFontRow(container, L, db.keystoneList.font,
         function() return db.keystoneList.rowSpacing end,
         function(v) db.keystoneList.rowSpacing = v end)
 
@@ -292,21 +331,13 @@ local function DrawKeystoneTab(container)
         function() return db.centerBanner.enabled end,
         function(v) db.centerBanner.enabled = v end)
 
-    AddCheckbox(container, L["OPT_UNLOCK_FRAMES"],
-        function() return not db.centerBanner.locked end,
-        function(v) db.centerBanner.locked = not v end)
+    AddCheckbox(container, L["OPT_LOCKED"],
+        function() return db.centerBanner.locked end,
+        function(v) db.centerBanner.locked = v end)
 
-    AddLSMFontDropdown(container, L["OPT_FONT"],
-        function() return db.centerBanner.font.name end,
-        function(v) db.centerBanner.font.name = v end)
-
-    AddSlider(container, L["OPT_FONT_SIZE"], 10, 48, 1,
-        function() return db.centerBanner.font.size end,
-        function(v) db.centerBanner.font.size = v end)
-
-    AddSlider(container, L["OPT_BANNER_DURATION"], 2, 30, 1,
-        function() return db.centerBanner.duration end,
-        function(v) db.centerBanner.duration = v end)
+    AddFontRow(container, L, db.centerBanner.font,
+        function() return db.centerBanner.rowSpacing end,
+        function(v) db.centerBanner.rowSpacing = v end)
 
     AddPositionControls(container, L, function() return db.centerBanner.anchor end)
 end
@@ -326,10 +357,10 @@ end
 -- ==========================================================================
 local function BuildTabContent(container, group)
     container:ReleaseChildren()
+    -- ScrollFrame is the sole child so a Fill-layout parent gives it a bounded
+    -- height, which is what lets it actually scroll when the content overflows.
     local scroll = AceGUI:Create("ScrollFrame")
     scroll:SetLayout("Flow")
-    scroll:SetFullWidth(true)
-    scroll:SetFullHeight(true)
     container:AddChild(scroll)
 
     if group == "general"  then DrawGeneralTab(scroll)
@@ -369,7 +400,7 @@ function ns:OpenOptions()
     self._optionsFrame = f
 
     local tab = AceGUI:Create("TabGroup")
-    tab:SetLayout("Flow")
+    tab:SetLayout("Fill")
     tab:SetFullWidth(true)
     tab:SetFullHeight(true)
     tab:SetTabs({
