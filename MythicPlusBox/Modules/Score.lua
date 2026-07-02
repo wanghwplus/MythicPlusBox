@@ -49,7 +49,11 @@ local function CreateOrGetLine(icon, lineKey)
 end
 
 local function ApplyLineStyle(text, cfg)
-    local path, size, outline = ns:GetFont({ name = ns.db.profile.font.name, size = cfg.size, outline = ns.db.profile.font.outline })
+    local path, size, outline = ns:GetFont({
+        name    = cfg.font or ns.db.profile.font.name,
+        size    = cfg.size,
+        outline = ns.db.profile.font.outline,
+    })
     text:SetFont(path, size, outline)
     text:ClearAllPoints()
     text:SetPoint("CENTER", text:GetParent(), "CENTER", cfg.x or 0, cfg.y or 0)

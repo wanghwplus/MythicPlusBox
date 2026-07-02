@@ -69,6 +69,12 @@ local function EnsureFrame()
     f:SetBackdropColor(0, 0, 0, 0.5)
     f:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
 
+    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    f.title:SetPoint("TOPLEFT",  f, "TOPLEFT",  FRAME_PAD, -FRAME_PAD)
+    f.title:SetPoint("TOPRIGHT", f, "TOPRIGHT", -FRAME_PAD, -FRAME_PAD)
+    f.title:SetJustifyH("CENTER")
+    f.title:SetFont(CurrentFont())
+
     M.frame = f
     M:ApplyAnchor()
     return f
@@ -189,15 +195,21 @@ local function ShouldShow(cfg)
 end
 
 local function LayoutRows()
+    local L = ns.L
     local cfg = ns.db.profile.centerBanner
     local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
-    local rowH = size + ROW_HEIGHT_PAD
-    local gap  = cfg.rowSpacing or 4
+    local rowH   = size + ROW_HEIGHT_PAD
+    local gap    = cfg.rowSpacing or 4
+    local titleH = size + 6
+    local afterTitleGap = gap + 4
+
+    M.frame.title:SetFont(path, size, outline)
+    M.frame.title:SetText("|cffffd700" .. (L["OPT_CENTER_BANNER"] or "Keystone owners") .. "|r")
 
     local list = CollectHolders(not cfg.locked)
     if #list == 0 then
         HideExtraRows(1)
-        M.frame:SetHeight(rowH + FRAME_PAD * 2)
+        M.frame:SetHeight(FRAME_PAD * 2 + titleH)
         return
     end
 
@@ -205,8 +217,8 @@ local function LayoutRows()
         local row = GetRow(i)
         row:ClearAllPoints()
         if i == 1 then
-            row:SetPoint("TOPLEFT",  M.frame, "TOPLEFT",  FRAME_PAD, -FRAME_PAD)
-            row:SetPoint("TOPRIGHT", M.frame, "TOPRIGHT", -FRAME_PAD, -FRAME_PAD)
+            row:SetPoint("TOPLEFT",  M.frame.title, "BOTTOMLEFT",  0, -afterTitleGap)
+            row:SetPoint("TOPRIGHT", M.frame.title, "BOTTOMRIGHT", 0, -afterTitleGap)
         else
             row:SetPoint("TOPLEFT",  M.rows[i - 1], "BOTTOMLEFT",  0, -gap)
             row:SetPoint("TOPRIGHT", M.rows[i - 1], "BOTTOMRIGHT", 0, -gap)
@@ -229,7 +241,8 @@ local function LayoutRows()
     end
 
     HideExtraRows(#list + 1)
-    M.frame:SetHeight(FRAME_PAD * 2 + rowH * #list + gap * math.max(#list - 1, 0))
+    M.frame:SetHeight(FRAME_PAD * 2 + titleH + afterTitleGap
+        + rowH * #list + gap * math.max(#list - 1, 0))
 end
 
 function M:Refresh()

@@ -61,7 +61,7 @@ local function AddDropdown(container, label, values, order, getValue, setValue)
     return w
 end
 
-local function AddLSMFontDropdown(container, label, getValue, setValue)
+local function AddLSMFontDropdown(container, label, getValue, setValue, relativeWidth)
     local fonts = LSM:HashTable("font")
     local order = {}
     for k in pairs(fonts) do table.insert(order, k) end
@@ -70,6 +70,7 @@ local function AddLSMFontDropdown(container, label, getValue, setValue)
     w:SetLabel(label)
     w:SetList(fonts, order)
     w:SetValue(getValue() or ns.BUNDLED_FONT_NAME)
+    if relativeWidth then w:SetRelativeWidth(relativeWidth) end
     w:SetCallback("OnValueChanged", function(_, _, val)
         setValue(val)
         ns:RefreshAll()
@@ -123,7 +124,7 @@ local function AddFontRow(container, L, cfgFont, spacingGetter, spacingSetter)
     fd:SetLabel(L["OPT_FONT"])
     fd:SetList(fonts, order)
     fd:SetValue(cfgFont.name or ns.BUNDLED_FONT_NAME)
-    fd:SetRelativeWidth(0.4)
+    fd:SetRelativeWidth(0.2)
     fd:SetCallback("OnValueChanged", function(_, _, v)
         cfgFont.name = v
         ns:RefreshAll()
@@ -134,7 +135,7 @@ local function AddFontRow(container, L, cfgFont, spacingGetter, spacingSetter)
     ss:SetLabel(L["OPT_FONT_SIZE"])
     ss:SetSliderValues(8, 32, 1)
     ss:SetValue(cfgFont.size or 12)
-    ss:SetRelativeWidth(0.3)
+    ss:SetRelativeWidth(0.4)
     ss:SetCallback("OnValueChanged", function(_, _, v)
         cfgFont.size = v
         ns:RefreshAll()
@@ -146,7 +147,7 @@ local function AddFontRow(container, L, cfgFont, spacingGetter, spacingSetter)
         rs:SetLabel(L["OPT_ROW_SPACING"])
         rs:SetSliderValues(0, 20, 1)
         rs:SetValue(spacingGetter() or 4)
-        rs:SetRelativeWidth(0.3)
+        rs:SetRelativeWidth(0.4)
         rs:SetCallback("OnValueChanged", function(_, _, v)
             spacingSetter(v)
             ns:RefreshAll()
@@ -242,15 +243,51 @@ local function DrawScoreTab(container)
             function() return cfg.shown end,
             function(v) cfg.shown = v end)
         AddSeparator(container, " ")
-        AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
-            function() return cfg.size end,
-            function(v) cfg.size = v end)
-        AddSlider(container, L["OPT_X_OFFSET"], -80, 80, 1,
-            function() return cfg.x end,
-            function(v) cfg.x = v end)
-        AddSlider(container, L["OPT_Y_OFFSET"], -80, 80, 1,
-            function() return cfg.y end,
-            function(v) cfg.y = v end)
+
+        -- Font dropdown + Font size share one row.
+        local fontRow = AceGUI:Create("SimpleGroup")
+        fontRow:SetFullWidth(true)
+        fontRow:SetLayout("Flow")
+        container:AddChild(fontRow)
+        AddLSMFontDropdown(fontRow, L["OPT_FONT"],
+            function() return cfg.font end,
+            function(v) cfg.font = v end, 0.5)
+        local sz = AceGUI:Create("Slider")
+        sz:SetLabel(L["OPT_FONT_SIZE"])
+        sz:SetSliderValues(8, 32, 1)
+        sz:SetValue(cfg.size)
+        sz:SetRelativeWidth(0.5)
+        sz:SetCallback("OnValueChanged", function(_, _, v)
+            cfg.size = v
+            ns:RefreshAll()
+        end)
+        fontRow:AddChild(sz)
+
+        -- X / Y offsets share one row.
+        local offsetRow = AceGUI:Create("SimpleGroup")
+        offsetRow:SetFullWidth(true)
+        offsetRow:SetLayout("Flow")
+        container:AddChild(offsetRow)
+        local xs = AceGUI:Create("Slider")
+        xs:SetLabel(L["OPT_X_OFFSET"])
+        xs:SetSliderValues(-80, 80, 1)
+        xs:SetValue(cfg.x)
+        xs:SetRelativeWidth(0.5)
+        xs:SetCallback("OnValueChanged", function(_, _, v)
+            cfg.x = v
+            ns:RefreshAll()
+        end)
+        offsetRow:AddChild(xs)
+        local ys = AceGUI:Create("Slider")
+        ys:SetLabel(L["OPT_Y_OFFSET"])
+        ys:SetSliderValues(-80, 80, 1)
+        ys:SetValue(cfg.y)
+        ys:SetRelativeWidth(0.5)
+        ys:SetCallback("OnValueChanged", function(_, _, v)
+            cfg.y = v
+            ns:RefreshAll()
+        end)
+        offsetRow:AddChild(ys)
     end
 end
 
@@ -270,7 +307,7 @@ local function DrawWeeklyTab(container)
 
     AddLSMFontDropdown(container, L["OPT_FONT"],
         function() return db.weekly.font.name end,
-        function(v) db.weekly.font.name = v end)
+        function(v) db.weekly.font.name = v end, 2 / 3)
 
     AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
         function() return db.weekly.font.size end,
