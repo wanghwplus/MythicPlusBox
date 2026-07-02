@@ -61,7 +61,7 @@ local function AddDropdown(container, label, values, order, getValue, setValue)
     return w
 end
 
-local function AddLSMFontDropdown(container, label, getValue, setValue, relativeWidth)
+local function AddLSMFontDropdown(container, label, getValue, setValue, relativeWidth, fixedWidth)
     local fonts = LSM:HashTable("font")
     local order = {}
     for k in pairs(fonts) do table.insert(order, k) end
@@ -70,7 +70,11 @@ local function AddLSMFontDropdown(container, label, getValue, setValue, relative
     w:SetLabel(label)
     w:SetList(fonts, order)
     w:SetValue(getValue() or LSM:GetDefault("font"))
-    if relativeWidth then w:SetRelativeWidth(relativeWidth) end
+    if fixedWidth then
+        w:SetWidth(fixedWidth)
+    elseif relativeWidth then
+        w:SetRelativeWidth(relativeWidth)
+    end
     w:SetCallback("OnValueChanged", function(_, _, val)
         setValue(val)
         ns:RefreshAll()
@@ -251,7 +255,7 @@ local function DrawScoreTab(container)
         container:AddChild(fontRow)
         AddLSMFontDropdown(fontRow, L["OPT_FONT"],
             function() return cfg.font end,
-            function(v) cfg.font = v end, 0.5)
+            function(v) cfg.font = v end, nil, 240)
         local sz = AceGUI:Create("Slider")
         sz:SetLabel(L["OPT_FONT_SIZE"])
         sz:SetSliderValues(8, 32, 1)
@@ -307,7 +311,7 @@ local function DrawWeeklyTab(container)
 
     AddLSMFontDropdown(container, L["OPT_FONT"],
         function() return db.weekly.font.name end,
-        function(v) db.weekly.font.name = v end, 2 / 3)
+        function(v) db.weekly.font.name = v end, nil, 240)
 
     AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
         function() return db.weekly.font.size end,
