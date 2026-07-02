@@ -462,8 +462,13 @@ end
 -- values instead of showing stale ones from when the tab was built.
 function ns:RefreshOptionsUI()
     local tab = self._optionsTab
-    if not tab or not tab.status or not tab.status.selected then return end
-    tab:SelectTab(tab.status.selected)
+    if not tab then return end
+    -- AceGUI TabGroup writes to whichever of `status` / `localstatus` exists;
+    -- we never call SetStatusTable, so `status` is nil and we must read from
+    -- `localstatus`. Guard both for safety.
+    local status = tab.status or tab.localstatus
+    if not status or not status.selected then return end
+    tab:SelectTab(status.selected)
 end
 
 -- ==========================================================================
