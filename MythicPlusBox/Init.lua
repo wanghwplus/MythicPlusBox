@@ -36,12 +36,40 @@ function ns:RefreshAll()
     end
 end
 
+function ns:SetupMinimapIcon()
+    if self._minimapReady then return end
+    local LDB   = LibStub("LibDataBroker-1.1", true)
+    local LDBIcon = LibStub("LibDBIcon-1.0", true)
+    if not LDB or not LDBIcon then return end
+    local launcher = LDB:NewDataObject(addonName, {
+        type = "launcher",
+        icon = [[Interface\AddOns\MythicPlusBox\Media\icon]],
+        label = self.L and self.L["ADDON_TITLE"] or addonName,
+        OnClick = function(_, button)
+            if button == "RightButton" then
+                self.db.profile.keystoneList.locked = not self.db.profile.keystoneList.locked
+                self.db.profile.centerBanner.locked = self.db.profile.keystoneList.locked
+                self:RefreshAll()
+            else
+                if self.OpenOptions then self:OpenOptions() end
+            end
+        end,
+        OnTooltipShow = function(tip)
+            tip:AddLine(self.L and self.L["ADDON_TITLE"] or addonName)
+            tip:AddLine("|cff9d9d9d/mpb|r")
+        end,
+    })
+    LDBIcon:Register(addonName, launcher, self.db.global.minimap)
+    self._minimapReady = true
+end
+
 local bootstrap = CreateFrame("Frame")
 bootstrap:RegisterEvent("ADDON_LOADED")
 bootstrap:RegisterEvent("PLAYER_LOGIN")
 bootstrap:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == addonName then
         ns:InitializeDB()
+        ns:SetupMinimapIcon()
         for _, mod in pairs(ns.modules) do
             if type(mod.OnDBReady) == "function" then mod:OnDBReady() end
         end

@@ -56,20 +56,21 @@ local function ClearRows()
     end
 end
 
-local function LayoutRow(row, index)
+local function LayoutRow(row, index, extraTop)
     local weekly = ns.db.profile.weekly
     row:SetFont(CurrentFont())
     row:Show()
     if index == 1 then
         row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", 0, 0)
     else
-        row:SetPoint("TOPLEFT", M.rows[index - 1], "BOTTOMLEFT", 0, -(weekly.font.rowSpacing or 4))
+        local gap = (weekly.font.rowSpacing or 4) + (extraTop or 0)
+        row:SetPoint("TOPLEFT", M.rows[index - 1], "BOTTOMLEFT", 0, -gap)
     end
 end
 
-local function EmitRow(index, text)
+local function EmitRow(index, text, extraTop)
     local row = GetRow(index)
-    LayoutRow(row, index)
+    LayoutRow(row, index, extraTop)
     row:SetText(text)
     return index + 1
 end
@@ -107,11 +108,11 @@ local function BuildDungeonStatsRows(runHistory, startIndex)
     end
     table.sort(order)
 
-    index = EmitRow(index, ColorClass(L["COMPLETION_COUNT_LABEL"]) .. "|cffff8f00" .. #runHistory .. "|r")
+    index = EmitRow(index, ColorClass(L["COMPLETION_COUNT_LABEL"]) .. "|cffff8f00" .. #runHistory .. "|r", 10)
 
     for _, id in ipairs(order) do
         local d = byDungeon[id]
-        local text = DungeonName(id) .. "|CFF9385ffx|R|CFF0ffff2" .. #d.runs .. "|r - "
+        local text = DungeonName(id) .. "  |CFF9385ffx|R|CFF0ffff2" .. #d.runs .. "|r - "
         for i, run in ipairs(d.runs) do
             text = text .. ColorCompleted(run.completed, run.level)
             if i < #d.runs then text = text .. "|cff9d9d9d·|r" end
@@ -172,7 +173,7 @@ local function BuildSeasonRows(runHistory)
     index = EmitRow(index, ColorClass(L["SEASON_RECORD_HEADER"]))
     for i, run in ipairs(bestList) do
         if i > 8 then break end
-        local text = "|cff" .. LevelColor(run.level) .. run.level .. "|r "
+        local text = "|c" .. LevelColor(run.level) .. run.level .. "|r "
                   .. DungeonName(run.mapChallengeModeID)
         index = EmitRow(index, text)
     end
@@ -189,6 +190,7 @@ function M:Update()
     local f = EnsureFrame()
     if not f then return end
     if not weekly.enabled then f:Hide(); return end
+    if not (PVEFrame and PVEFrame:IsShown()) then f:Hide(); return end
     f:Show()
 
     local showSeasonData = false
@@ -216,7 +218,8 @@ function M:OnPlayerLogin()
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     f:SetScript("OnEvent", function(_, event)
         if event == "MODIFIER_STATE_CHANGED" then
-            if ns.db.profile.weekly.enabled and ns.db.profile.weekly.useModifierKey then
+            local w = ns.db.profile.weekly
+            if w.enabled and w.useModifierKey and PVEFrame and PVEFrame:IsShown() then
                 M:Update()
             end
         else

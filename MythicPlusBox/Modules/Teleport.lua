@@ -116,7 +116,7 @@ end
 
 function M:OnSpellCast(unit, spellID)
     if unit ~= "player" then return end
-    if not ns.db.profile.teleport.announceEnabled then return end
+    if not ns.db.profile.teleport.enabled then return end
     if not ShouldAnnounce() then return end
     local msg = self:GenerateMessage(spellID)
     if not msg then return end

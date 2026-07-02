@@ -5,13 +5,11 @@ local AceConfig       = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceDBOptions    = LibStub("AceDBOptions-3.0")
 local LSM             = LibStub("LibSharedMedia-3.0")
-local LibDualSpec     = LibStub("LibDualSpec-1.0", true)
 
 local ANCHOR_POINTS = {
     "CENTER", "LEFT", "RIGHT", "TOP", "BOTTOM",
     "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT",
 }
-local OUTLINE_OPTIONS = { "NONE", "OUTLINE", "THICKOUTLINE", "MONOCHROME" }
 
 -- ==========================================================================
 -- Helper closures modelled on Stats.lua AddCheckbox/AddSlider/AddDropdown.
@@ -110,18 +108,9 @@ local function AnchorValueTable(L)
     return values
 end
 
-local function OutlineValueTable(L)
-    return {
-        NONE         = L["OPT_OUTLINE_NONE"],
-        OUTLINE      = L["OPT_OUTLINE_THIN"],
-        THICKOUTLINE = L["OPT_OUTLINE_THICK"],
-        MONOCHROME   = L["OPT_OUTLINE_MONOCHROME"],
-    }
-end
-
 -- ==========================================================================
 -- Position controls (anchor point + relativePoint + x/y sliders) reused
--- by Weekly, KeystoneList, CenterBanner tabs.
+-- by Weekly, KeystoneList, CenterBanner tabs. x/y share one row.
 -- ==========================================================================
 local function AddPositionControls(container, L, getAnchor)
     AddSeparator(container, L["OPT_ANCHOR_POINT"])
@@ -131,17 +120,36 @@ local function AddPositionControls(container, L, getAnchor)
         function() return getAnchor().point end,
         function(v) getAnchor().point = v end)
 
-    AddDropdown(container, "Relative point", anchorValues, ANCHOR_POINTS,
+    AddDropdown(container, L["OPT_RELATIVE_POINT"], anchorValues, ANCHOR_POINTS,
         function() return getAnchor().relativePoint end,
         function(v) getAnchor().relativePoint = v end)
 
-    AddSlider(container, L["OPT_X_OFFSET"], -800, 800, 1,
-        function() return getAnchor().x end,
-        function(v) getAnchor().x = v end)
+    local row = AceGUI:Create("SimpleGroup")
+    row:SetFullWidth(true)
+    row:SetLayout("Flow")
+    container:AddChild(row)
 
-    AddSlider(container, L["OPT_Y_OFFSET"], -600, 600, 1,
-        function() return getAnchor().y end,
-        function(v) getAnchor().y = v end)
+    local xs = AceGUI:Create("Slider")
+    xs:SetLabel(L["OPT_X_OFFSET"])
+    xs:SetSliderValues(-800, 800, 1)
+    xs:SetValue(getAnchor().x)
+    xs:SetRelativeWidth(0.5)
+    xs:SetCallback("OnValueChanged", function(_, _, v)
+        getAnchor().x = v
+        ns:RefreshAll()
+    end)
+    row:AddChild(xs)
+
+    local ys = AceGUI:Create("Slider")
+    ys:SetLabel(L["OPT_Y_OFFSET"])
+    ys:SetSliderValues(-600, 600, 1)
+    ys:SetValue(getAnchor().y)
+    ys:SetRelativeWidth(0.5)
+    ys:SetCallback("OnValueChanged", function(_, _, v)
+        getAnchor().y = v
+        ns:RefreshAll()
+    end)
+    row:AddChild(ys)
 end
 
 -- ==========================================================================
@@ -151,22 +159,11 @@ local function DrawGeneralTab(container)
     local L, db = ns.L, ns.db.profile
     AddSeparator(container, L["TAB_GENERAL"])
 
-    AddLSMFontDropdown(container, L["OPT_FONT"],
-        function() return db.font.name end,
-        function(v) db.font.name = v end)
-
-    AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
-        function() return db.font.size end,
-        function(v) db.font.size = v end)
-
-    AddDropdown(container, L["OPT_FONT_OUTLINE"], OutlineValueTable(L), OUTLINE_OPTIONS,
-        function() return db.font.outline end,
-        function(v) db.font.outline = v end)
-
     AddCheckbox(container, L["OPT_MINIMAP_ICON"],
         function() return not ns.db.global.minimap.hide end,
         function(v)
             ns.db.global.minimap.hide = not v
+            if ns.SetupMinimapIcon then ns:SetupMinimapIcon() end
             local icon = LibStub("LibDBIcon-1.0", true)
             if icon then
                 if v then icon:Show(addonName) else icon:Hide(addonName) end
@@ -186,12 +183,18 @@ local function DrawScoreTab(container)
         function() return db.score.enabled end,
         function(v) db.score.enabled = v end)
 
+    local labels = {
+        name  = { section = L["OPT_SCORE_NAME"],  toggle = L["OPT_SCORE_SHOW_NAME"]  },
+        level = { section = L["OPT_SCORE_LEVEL"], toggle = L["OPT_SCORE_SHOW_LEVEL"] },
+        score = { section = L["OPT_SCORE_SCORE"], toggle = L["OPT_SCORE_SHOW_SCORE"] },
+    }
     for _, key in ipairs({ "name", "level", "score" }) do
-        AddSeparator(container, key)
+        AddSeparator(container, labels[key].section)
         local cfg = db.score.overlay[key]
-        AddCheckbox(container, "Show " .. key,
+        AddCheckbox(container, labels[key].toggle,
             function() return cfg.shown end,
             function(v) cfg.shown = v end)
+        AddSeparator(container, " ")
         AddSlider(container, L["OPT_FONT_SIZE"], 8, 32, 1,
             function() return cfg.size end,
             function(v) cfg.size = v end)
@@ -216,6 +219,8 @@ local function DrawWeeklyTab(container)
         function() return db.weekly.useModifierKey end,
         function(v) db.weekly.useModifierKey = v end)
 
+    AddSeparator(container, " ")
+
     AddLSMFontDropdown(container, L["OPT_FONT"],
         function() return db.weekly.font.name end,
         function(v) db.weekly.font.name = v end)
@@ -238,10 +243,6 @@ local function DrawTeleportTab(container)
     AddCheckbox(container, L["OPT_ENABLED"],
         function() return db.teleport.enabled end,
         function(v) db.teleport.enabled = v end)
-
-    AddCheckbox(container, L["OPT_ANNOUNCE_ENABLED"],
-        function() return db.teleport.announceEnabled end,
-        function(v) db.teleport.announceEnabled = v end)
 
     AddEditBox(container, L["OPT_ANNOUNCE_TEMPLATE"], true,
         function() return db.teleport.announceTemplate end,
@@ -321,7 +322,6 @@ local function RegisterProfileOptions()
     if ns._profileOptionsRegistered then return end
     ns._profileOptionsRegistered = true
     local profileOpts = AceDBOptions:GetOptionsTable(ns.db)
-    if LibDualSpec then LibDualSpec:EnhanceOptions(profileOpts, ns.db) end
     AceConfig:RegisterOptionsTable("MythicPlusBox_Profiles", profileOpts)
 end
 

@@ -24,7 +24,6 @@ local defaults = {
         },
         teleport = {
             enabled          = true,
-            announceEnabled  = false,
             announceTemplate = nil,
         },
         keystoneList = {
@@ -72,9 +71,6 @@ local defaults = {
 function ns:InitializeDB()
     local AceDB = LibStub("AceDB-3.0")
     self.db = AceDB:New("MythicPlusBoxDB", defaults, true)
-
-    local LibDualSpec = LibStub("LibDualSpec-1.0", true)
-    if LibDualSpec then LibDualSpec:EnhanceDatabase(self.db, addonName) end
 
     self.db.RegisterCallback(self, "OnProfileChanged", function() self:RefreshAll() end)
     self.db.RegisterCallback(self, "OnProfileCopied",  function() self:RefreshAll() end)
