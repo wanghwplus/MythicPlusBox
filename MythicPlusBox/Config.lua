@@ -31,7 +31,7 @@ local defaults = {
             locked      = true,
             rowSpacing  = 4,
             font        = { name = nil, size = 12 },
-            anchor      = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 0, y = 200 },
+            anchor      = { point = "CENTER", relativeTo = "UIParent", relativePoint = "CENTER", x = 10, y = 200 },
         },
         centerBanner = {
             enabled    = true,
