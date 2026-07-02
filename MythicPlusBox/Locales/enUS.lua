@@ -70,7 +70,7 @@ L["ITEM_LEVEL"]               = "ilvl"
 -- ============================================================================
 -- Teleport
 -- ============================================================================
-L["TELEPORT_TEMPLATE_DEFAULT"] = "Casting %s, teleporting to %s"
+L["TELEPORT_TEMPLATE_DEFAULT"] = "Casting: {spell}, teleporting to: {dungeon}"
 L["TELEPORT_TOOLTIP_TITLE"]    = "Teleport to dungeon"
 L["TELEPORT_UNKNOWN_COOLDOWN"] = "Unknown cooldown"
 L["TELEPORT_READY"]            = "Ready"

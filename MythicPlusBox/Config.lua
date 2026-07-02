@@ -86,6 +86,12 @@ function ns:InitializeDB()
             if cleaned ~= tp.announceTemplate then
                 tp.announceTemplate = cleaned
             end
+            -- One-shot migration: older defaults used %s placeholders that the
+            -- runtime substitutor ({spell}/{dungeon}) never fills in. If the
+            -- saved template still carries %s, replace it with the new default.
+            if tp.announceTemplate:find("%%s") then
+                tp.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
+            end
         end
     end
 

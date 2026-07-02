@@ -64,7 +64,7 @@ L["NO_RECORD"]                = "無記錄"
 L["ITEM_LEVEL"]               = "裝等"
 
 -- Teleport
-L["TELEPORT_TEMPLATE_DEFAULT"] = "正在施放:%s,傳送到:%s"
+L["TELEPORT_TEMPLATE_DEFAULT"] = "正在施放: {spell},傳送到: {dungeon}"
 L["TELEPORT_TOOLTIP_TITLE"]    = "傳送到副本"
 L["TELEPORT_UNKNOWN_COOLDOWN"] = "未知冷卻"
 L["TELEPORT_READY"]            = "已就緒"

@@ -262,6 +262,16 @@ function M:Refresh()
     if not ShouldShow(cfg) then self.frame:Hide(); return end
     self.frame:Show()
     self.frame:EnableMouse(not cfg.locked)
+    -- Backdrop is only visible while the frame is unlocked so users have a
+    -- visual target to click and drag. In normal play the list floats with
+    -- no frame around it.
+    if cfg.locked then
+        self.frame:SetBackdropColor(0, 0, 0, 0)
+        self.frame:SetBackdropBorderColor(0, 0, 0, 0)
+    else
+        self.frame:SetBackdropColor(0, 0, 0, 0.5)
+        self.frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
+    end
     self:ApplyAnchor()
     LayoutRows()
 end
