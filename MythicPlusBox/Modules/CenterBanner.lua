@@ -144,9 +144,23 @@ local function KeystoneForUnit(lib, unitId)
     return { level = 0, challengeMapID = 0, classID = classID }
 end
 
+-- Blizzard only reports a "current" Mythic+ map ID during an active timed run.
+-- We also want the banner to work in the grace period at the keystone stone
+-- and in non-timed dungeon modes (Mythic 0, Heroic scouting), so we fall back
+-- to matching the instance name against the season's dungeon table.
 local function ActiveMapID()
     if C_ChallengeMode and C_ChallengeMode.GetActiveChallengeMapID then
-        return C_ChallengeMode.GetActiveChallengeMapID() or 0
+        local mapID = C_ChallengeMode.GetActiveChallengeMapID() or 0
+        if mapID ~= 0 then return mapID end
+    end
+    if not (C_ChallengeMode and C_ChallengeMode.GetMapUIInfo) then return 0 end
+    local instanceName, instanceType = GetInstanceInfo()
+    if instanceType ~= "party" or not instanceName or instanceName == "" then
+        return 0
+    end
+    for _, mapID in ipairs(ns.CurrentSeasonMapIDs or {}) do
+        local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
+        if mapName == instanceName then return mapID end
     end
     return 0
 end
