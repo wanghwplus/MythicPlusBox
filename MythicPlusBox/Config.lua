@@ -3,7 +3,7 @@ local addonName, ns = ...
 local defaults = {
     profile = {
         font = {
-            name    = "MythicPlusBox",
+            name    = nil,
             size    = 14,
             outline = "OUTLINE",
         },
@@ -86,6 +86,25 @@ function ns:InitializeDB()
             if cleaned ~= tp.announceTemplate then
                 tp.announceTemplate = cleaned
             end
+        end
+    end
+
+    -- One-shot migration: the bundled "MythicPlusBox" font has been removed.
+    -- Clear it from any saved font.name field so LSM falls back cleanly.
+    local prof = self.db.profile
+    if prof.font and prof.font.name == "MythicPlusBox" then prof.font.name = nil end
+    if prof.weekly and prof.weekly.font and prof.weekly.font.name == "MythicPlusBox" then
+        prof.weekly.font.name = nil
+    end
+    if prof.keystoneList and prof.keystoneList.font and prof.keystoneList.font.name == "MythicPlusBox" then
+        prof.keystoneList.font.name = nil
+    end
+    if prof.centerBanner and prof.centerBanner.font and prof.centerBanner.font.name == "MythicPlusBox" then
+        prof.centerBanner.font.name = nil
+    end
+    if prof.score and prof.score.overlay then
+        for _, sub in pairs(prof.score.overlay) do
+            if sub.font == "MythicPlusBox" then sub.font = nil end
         end
     end
 end

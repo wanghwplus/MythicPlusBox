@@ -9,17 +9,13 @@ ns.modules = {}
 ns.L       = LibStub("AceLocale-3.0"):GetLocale(addonName, true)
 
 local LSM = LibStub("LibSharedMedia-3.0")
-local BUNDLED_FONT_NAME = "MythicPlusBox"
-LSM:Register("font", BUNDLED_FONT_NAME, [[Interface\AddOns\MythicPlusBox\Media\font.ttf]],
-    LSM.LOCALE_BIT_western + LSM.LOCALE_BIT_ruRU + LSM.LOCALE_BIT_koKR + LSM.LOCALE_BIT_zhCN + LSM.LOCALE_BIT_zhTW)
-ns.BUNDLED_FONT_NAME = BUNDLED_FONT_NAME
 
 function ns:GetFont(fontDesc)
     local fontName = (fontDesc and fontDesc.name) or self.db.profile.font.name
     local size     = (fontDesc and fontDesc.size) or self.db.profile.font.size
     local outline  = (fontDesc and fontDesc.outline) or self.db.profile.font.outline
-    local path = LSM:Fetch("font", fontName)
-              or LSM:Fetch("font", BUNDLED_FONT_NAME)
+    local path = (fontName and LSM:Fetch("font", fontName))
+              or LSM:Fetch("font", LSM:GetDefault("font"))
               or STANDARD_TEXT_FONT
     return path, size or 12, outline or ""
 end

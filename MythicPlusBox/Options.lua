@@ -69,7 +69,7 @@ local function AddLSMFontDropdown(container, label, getValue, setValue, relative
     local w = AceGUI:Create("LSM30_Font")
     w:SetLabel(label)
     w:SetList(fonts, order)
-    w:SetValue(getValue() or ns.BUNDLED_FONT_NAME)
+    w:SetValue(getValue() or LSM:GetDefault("font"))
     if relativeWidth then w:SetRelativeWidth(relativeWidth) end
     w:SetCallback("OnValueChanged", function(_, _, val)
         setValue(val)
@@ -123,7 +123,7 @@ local function AddFontRow(container, L, cfgFont, spacingGetter, spacingSetter)
     local fd = AceGUI:Create("LSM30_Font")
     fd:SetLabel(L["OPT_FONT"])
     fd:SetList(fonts, order)
-    fd:SetValue(cfgFont.name or ns.BUNDLED_FONT_NAME)
+    fd:SetValue(cfgFont.name or LSM:GetDefault("font"))
     fd:SetRelativeWidth(0.2)
     fd:SetCallback("OnValueChanged", function(_, _, v)
         cfgFont.name = v
