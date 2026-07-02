@@ -123,11 +123,22 @@ function M:Refresh()
     local cfg = ns.db.profile.centerBanner
     self:ApplyAnchor()
     self.frame:EnableMouse(not cfg.locked)
-    if not cfg.enabled then self.frame:Hide() end
-    -- If the frame is currently shown (banner active or user unlocked to drag), reapply text style.
-    if self.frame:IsShown() then
-        local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
-        self.frame.text:SetFont(path, size, outline)
+    if not cfg.enabled then self.frame:Hide(); return end
+
+    local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
+    self.frame.text:SetFont(path, size, outline)
+
+    -- Unlocked-preview mode: show a placeholder so the user can see and drag
+    -- the anchor even outside a live run. Once relocked, hide the preview.
+    if not cfg.locked then
+        local L = ns.L
+        self.frame.text:SetText("|cffffd700" .. (L["OPT_CENTER_BANNER"] or "Center Banner") .. "|r")
+        self.frame:SetAlpha(1)
+        self.frame:Show()
+        if self._hideTimer then self._hideTimer:Cancel(); self._hideTimer = nil end
+    elseif self.frame:IsShown() and not self._hideTimer then
+        -- Frame was previewed while unlocked — hide it now that we're relocked.
+        self.frame:Hide()
     end
 end
 

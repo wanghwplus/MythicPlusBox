@@ -4,8 +4,8 @@ local M = {}
 ns:RegisterModule("keystoneList", M)
 
 local REFRESH_INTERVAL = 3.0
-local ICON_SIZE        = 64
-local ICON_TEXT_GAP    = 10
+local ICON_SIZE        = 42
+local ICON_TEXT_GAP    = 8
 local FALLBACK_ICON    = [[Interface\Icons\INV_Misc_Key_14]]
 
 M.rows = {}
@@ -58,10 +58,6 @@ local function EnsureFrame()
     })
     f:SetBackdropColor(0, 0, 0, 0.5)
     f:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
-
-    f.title = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    f.title:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -8)
-    f.title:SetJustifyH("LEFT")
 
     M.frame = f
     M:ApplyAnchor()
@@ -166,13 +162,12 @@ local function CollectPartyKeystones()
     local result = {}
     local lib = GetLibOpenRaid()
     local cfg = ns.db.profile.keystoneList
-    -- In unlocked-preview mode always keep the player in the list so the frame
-    -- has something to render while the user is dragging it into place.
-    local includeEmpty = cfg.showOffline or not cfg.locked
     for _, unitId in ipairs(PartyUnitIDs()) do
         local info = KeystoneForUnit(lib, unitId)
         local isPlayer = (unitId == "player")
-        if info.level > 0 or includeEmpty or (not cfg.locked and isPlayer) then
+        -- The player row is always kept (with a placeholder when they have no
+        -- keystone) so unlocking the frame in solo previews still has content.
+        if info.level > 0 or isPlayer then
             table.insert(result, {
                 unitName       = UnitName(unitId) or unitId,
                 level          = info.level,
@@ -203,45 +198,23 @@ local function LayoutRows()
     local L = ns.L
     local cfg = ns.db.profile.keystoneList
     local path, size, outline = ns:GetFont({ name = cfg.font.name, size = cfg.font.size, outline = ns.db.profile.font.outline })
-    M.frame.title:SetFont(path, size, outline)
-    M.frame.title:SetText("|cffffd700" .. L["KEYSTONE_LIST_HEADER"] .. "|r")
+    local useAbbr = ns.db.profile.score and ns.db.profile.score.useAbbreviation
 
     local list = CollectPartyKeystones()
-    local titleH = size + 12
-    local rowH   = ICON_SIZE
-    local gap    = math.max(cfg.rowSpacing or 4, 4)
+    local rowH  = ICON_SIZE
+    local gap   = math.max(cfg.rowSpacing or 4, 4)
+    local pad   = 8
 
-    if #list == 0 then
-        local row = GetRow(1)
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", M.frame.title, "BOTTOMLEFT", 0, -gap)
-        row:SetPoint("RIGHT",   M.frame, "RIGHT", -8, 0)
-        row:SetHeight(rowH)
-        row:Show()
-        row.icon:SetTexture(FALLBACK_ICON)
-        row.iconBorder:Show()
-        row.level:SetFont(path, math.max(size + 4, 14), outline)
-        row.level:SetText("")
-        row.dungeon:SetFont(path, size, outline)
-        row.holder:SetFont(path, size, outline)
-        row.dungeon:SetText("|cff9d9d9d" ..
-            (IsInGroup() and L["KEYSTONE_NONE"] or L["KEYSTONE_NO_PARTY"]) .. "|r")
-        row.holder:SetText("")
-        HideExtraRows(2)
-        M.frame:SetHeight(titleH + rowH + gap + 12)
-        return
-    end
-
-    local levelSize = math.max(size + 6, 18)
+    local levelSize = math.max(math.floor(ICON_SIZE * 0.55), size + 2)
     for i, entry in ipairs(list) do
         local row = GetRow(i)
         row:ClearAllPoints()
         if i == 1 then
-            row:SetPoint("TOPLEFT", M.frame.title, "BOTTOMLEFT", 0, -gap)
+            row:SetPoint("TOPLEFT", M.frame, "TOPLEFT", pad, -pad)
         else
             row:SetPoint("TOPLEFT", M.rows[i - 1], "BOTTOMLEFT", 0, -gap)
         end
-        row:SetPoint("RIGHT", M.frame, "RIGHT", -8, 0)
+        row:SetPoint("RIGHT", M.frame, "RIGHT", -pad, 0)
         row:SetHeight(rowH)
         row:Show()
 
@@ -254,7 +227,7 @@ local function LayoutRows()
 
         if entry.level > 0 then
             row.level:SetText("|c" .. LevelColor(entry.level) .. "+" .. entry.level .. "|r")
-            row.dungeon:SetText(ns:GetDungeonName(entry.challengeMapID, false))
+            row.dungeon:SetText(ns:GetDungeonName(entry.challengeMapID, useAbbr))
         else
             row.level:SetText("|cff9d9d9d-|r")
             row.dungeon:SetText("|cff9d9d9d" .. L["KEYSTONE_NONE"] .. "|r")
@@ -267,7 +240,8 @@ local function LayoutRows()
     end
 
     HideExtraRows(#list + 1)
-    M.frame:SetHeight(titleH + (rowH + gap) * #list + 8)
+    local rowCount = math.max(#list, 1)
+    M.frame:SetHeight(pad * 2 + rowH * rowCount + gap * math.max(rowCount - 1, 0))
 end
 
 local function ShouldShow(cfg)

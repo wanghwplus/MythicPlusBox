@@ -195,7 +195,7 @@ function M:Update()
 
     local showSeasonData = false
     if weekly.useModifierKey then
-        showSeasonData = IsAltKeyDown() or IsShiftKeyDown() or IsControlKeyDown()
+        showSeasonData = IsShiftKeyDown()
     end
 
     -- Anchor may have changed via Options — reapply.

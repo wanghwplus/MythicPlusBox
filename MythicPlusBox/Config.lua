@@ -29,7 +29,6 @@ local defaults = {
         keystoneList = {
             enabled     = true,
             locked      = true,
-            showOffline = false,
             rowSpacing  = 4,
             font        = { name = nil, size = 12 },
             anchor      = { point = "LEFT", relativeTo = "UIParent", relativePoint = "LEFT", x = 20, y = 0 },

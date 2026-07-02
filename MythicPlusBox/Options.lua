@@ -272,10 +272,6 @@ local function DrawKeystoneTab(container)
         function() return not db.keystoneList.locked end,
         function(v) db.keystoneList.locked = not v end)
 
-    AddCheckbox(container, L["OPT_SHOW_OFFLINE"],
-        function() return db.keystoneList.showOffline end,
-        function(v) db.keystoneList.showOffline = v end)
-
     AddLSMFontDropdown(container, L["OPT_FONT"],
         function() return db.keystoneList.font.name end,
         function(v) db.keystoneList.font.name = v end)
@@ -362,6 +358,11 @@ function ns:OpenOptions()
     f:SetWidth(800)
     f:SetHeight(600)
     f:SetCallback("OnClose", function(widget)
+        -- Frames unlocked to reposition should not stay unlocked after the
+        -- options window closes — otherwise a stray click drags them again.
+        ns.db.profile.keystoneList.locked = true
+        ns.db.profile.centerBanner.locked = true
+        ns:RefreshAll()
         AceGUI:Release(widget)
         ns._optionsFrame = nil
     end)
