@@ -144,20 +144,18 @@ local function KeystoneForUnit(lib, unitId)
     return { level = 0, challengeMapID = 0, classID = classID }
 end
 
--- Blizzard only reports a "current" Mythic+ map ID during an active timed run.
--- We also want the banner to work in the grace period at the keystone stone
--- and in non-timed dungeon modes (Mythic 0, Heroic scouting), so we fall back
--- to matching the instance name against the season's dungeon table.
+-- Banner is only relevant at Mythic-0 difficulty: that is the pre-insertion
+-- state where the party still has to decide whose key to run. Once a key is
+-- inserted the instance transitions to the Mythic+ difficulty and knowing who
+-- else holds a key stops mattering. Normal / Heroic can't host a keystone.
+local MYTHIC_DIFFICULTY_ID = 23
 local function ActiveMapID()
-    if C_ChallengeMode and C_ChallengeMode.GetActiveChallengeMapID then
-        local mapID = C_ChallengeMode.GetActiveChallengeMapID() or 0
-        if mapID ~= 0 then return mapID end
-    end
     if not (C_ChallengeMode and C_ChallengeMode.GetMapUIInfo) then return 0 end
-    local instanceName, instanceType = GetInstanceInfo()
+    local instanceName, instanceType, difficultyID = GetInstanceInfo()
     if instanceType ~= "party" or not instanceName or instanceName == "" then
         return 0
     end
+    if difficultyID ~= MYTHIC_DIFFICULTY_ID then return 0 end
     for _, mapID in ipairs(ns.CurrentSeasonMapIDs or {}) do
         local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
         if mapName == instanceName then return mapID end
@@ -266,6 +264,16 @@ function M:Refresh()
     if not ShouldShow(cfg) then self.frame:Hide(); return end
     self:ApplyAnchor()
     self.frame:EnableMouse(not cfg.locked)
+    -- Backdrop is only visible while the frame is unlocked so users have a
+    -- visual target to click and drag. In normal play the banner floats over
+    -- the screen with no frame around it.
+    if cfg.locked then
+        self.frame:SetBackdropColor(0, 0, 0, 0)
+        self.frame:SetBackdropBorderColor(0, 0, 0, 0)
+    else
+        self.frame:SetBackdropColor(0, 0, 0, 0.5)
+        self.frame:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.6)
+    end
     self.frame:Show()
     LayoutRows()
 end
