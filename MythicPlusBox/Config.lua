@@ -11,9 +11,9 @@ local defaults = {
             enabled         = true,
             useAbbreviation = true,
             overlay = {
-                name  = { shown = true, x = 0, y = 22,  size = 12, font = nil },
+                name  = { shown = true, x = 0, y = 22,  size = 16, font = nil },
                 level = { shown = true, x = 0, y = 0,   size = 20, font = nil },
-                score = { shown = true, x = 0, y = -22, size = 12, font = nil },
+                score = { shown = true, x = 0, y = -22, size = 20, font = nil },
             },
         },
         weekly = {

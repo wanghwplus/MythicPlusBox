@@ -215,10 +215,15 @@ local function DrawGeneralTab(container)
         function() return not ns.db.global.minimap.hide end,
         function(v)
             ns.db.global.minimap.hide = not v
+            -- Register lazily in case the icon was not created at login
+            -- (SetupMinimapIcon early-returns when already ready).
             if ns.SetupMinimapIcon then ns:SetupMinimapIcon() end
             local icon = LibStub("LibDBIcon-1.0", true)
-            if icon then
-                if v then icon:Show(addonName) else icon:Hide(addonName) end
+            if icon and icon.IsRegistered and icon:IsRegistered(addonName) then
+                -- Refresh reads db.hide (same table we just mutated) and
+                -- creates the button on demand if it was queued at Register
+                -- with hide=true.
+                icon:Refresh(addonName, ns.db.global.minimap)
             end
         end)
 
