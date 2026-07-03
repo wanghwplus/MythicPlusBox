@@ -114,12 +114,17 @@ function M:GenerateMessage(spellID)
     return (template:gsub("{spell}", link):gsub("{dungeon}", dungeonName))
 end
 
-function M:OnSpellCast(unit, spellID)
+function M:OnSpellCast(unit, spellID, castGUID)
     if unit ~= "player" then return end
     if not ns.db.profile.teleport.enabled then return end
     if not ShouldAnnounce() then return end
+    -- Same cast can fire UNIT_SPELLCAST_START more than once (loading-screen
+    -- edge cases, self-cast frame refreshes). Dedup by castGUID so a single
+    -- cast only broadcasts once.
+    if castGUID and castGUID == self._lastCastGUID then return end
     local msg = self:GenerateMessage(spellID)
     if not msg then return end
+    self._lastCastGUID = castGUID
     if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
         SafeSendChatMessage(msg, "INSTANCE_CHAT")
     elseif IsInGroup() then
@@ -138,7 +143,7 @@ function M:OnPlayerLogin()
     f:RegisterEvent("LOADING_SCREEN_ENABLED")
     f:RegisterEvent("LOADING_SCREEN_DISABLED")
     f:RegisterEvent("UNIT_SPELLCAST_START")
-    f:SetScript("OnEvent", function(_, event, arg1, _, spellID)
+    f:SetScript("OnEvent", function(_, event, arg1, castGUID, spellID)
         if event == "ADDON_LOADED" and arg1 == "Blizzard_ChallengesUI" then
             TryInit()
         elseif event == "LOADING_SCREEN_ENABLED" then
@@ -146,7 +151,7 @@ function M:OnPlayerLogin()
         elseif event == "LOADING_SCREEN_DISABLED" then
             M.isLoadingScreen = nil
         elseif event == "UNIT_SPELLCAST_START" then
-            M:OnSpellCast(arg1, spellID)
+            M:OnSpellCast(arg1, spellID, castGUID)
         end
     end)
 end
