@@ -1,5 +1,16 @@
 local addonName, ns = ...
 
+-- Every string here was, at some point, a locale's default teleport announce
+-- template. If we see one of them saved in the profile we treat it as "user
+-- never customised it" and drop it back to nil, so the runtime falls through
+-- to the current locale's L["TELEPORT_TEMPLATE_DEFAULT"]. Add every new
+-- locale's default string here, and never remove old entries.
+ns.KNOWN_DEFAULT_TELEPORT_TEMPLATES = {
+    ["Casting: {spell}, teleporting to: {dungeon}"] = true,   -- enUS
+    ["正在施放: {spell},传送到: {dungeon}"]         = true,   -- zhCN
+    ["正在施放: {spell},傳送到: {dungeon}"]         = true,   -- zhTW
+}
+
 local defaults = {
     profile = {
         font = {
@@ -75,23 +86,23 @@ function ns:InitializeDB()
     self.db.RegisterCallback(self, "OnProfileCopied",  function() self:RefreshAll() end)
     self.db.RegisterCallback(self, "OnProfileReset",   function() self:RefreshAll() end)
 
-    local L = self.L
-    if L then
-        local tp = self.db.profile.teleport
-        if tp.announceTemplate == nil then
-            tp.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
-        elseif type(tp.announceTemplate) == "string" then
-            -- One-shot migration: strip legacy "[MPBox] " prefix from saved templates.
-            local cleaned = tp.announceTemplate:gsub("^%s*%[MPBox%]%s*", "")
-            if cleaned ~= tp.announceTemplate then
-                tp.announceTemplate = cleaned
-            end
-            -- One-shot migration: older defaults used %s placeholders that the
-            -- runtime substitutor ({spell}/{dungeon}) never fills in. If the
-            -- saved template still carries %s, replace it with the new default.
-            if tp.announceTemplate:find("%%s") then
-                tp.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
-            end
+    -- The teleport announce template stays nil in DB when the user hasn't
+    -- customised it; Teleport.lua / Options.lua fall back to the current
+    -- locale's L["TELEPORT_TEMPLATE_DEFAULT"] at read time. This is what
+    -- lets the default text follow the WoW client language, instead of
+    -- freezing whichever locale first initialised the profile.
+    local tp = self.db.profile.teleport
+    if type(tp.announceTemplate) == "string" then
+        -- Strip legacy "[MPBox] " prefix.
+        local cleaned = tp.announceTemplate:gsub("^%s*%[MPBox%]%s*", "")
+        if cleaned ~= tp.announceTemplate then
+            tp.announceTemplate = cleaned
+        end
+        -- Any historical default template (including old %s placeholders
+        -- that the {spell}/{dungeon} substitutor never fills in) resets to
+        -- nil so the locale fallback wins.
+        if tp.announceTemplate:find("%%s") or ns.KNOWN_DEFAULT_TELEPORT_TEMPLATES[tp.announceTemplate] then
+            tp.announceTemplate = nil
         end
     end
 

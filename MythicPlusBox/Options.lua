@@ -338,8 +338,17 @@ local function DrawTeleportTab(container)
         function(v) db.teleport.enabled = v end)
 
     AddEditBox(container, L["OPT_ANNOUNCE_TEMPLATE"], true,
-        function() return db.teleport.announceTemplate end,
-        function(v) db.teleport.announceTemplate = v end)
+        function() return db.teleport.announceTemplate or L["TELEPORT_TEMPLATE_DEFAULT"] end,
+        function(v)
+            -- If the user leaves the field at (or clears it back to) the
+            -- current locale's default, store nil so the template keeps
+            -- following the client language after a switch.
+            if v == nil or v == "" or v == L["TELEPORT_TEMPLATE_DEFAULT"] then
+                db.teleport.announceTemplate = nil
+            else
+                db.teleport.announceTemplate = v
+            end
+        end)
 
     local help = AceGUI:Create("Label")
     help:SetText(L["OPT_ANNOUNCE_HELP"])
@@ -347,7 +356,7 @@ local function DrawTeleportTab(container)
     container:AddChild(help)
 
     AddButton(container, L["OPT_RESET"], function()
-        db.teleport.announceTemplate = L["TELEPORT_TEMPLATE_DEFAULT"]
+        db.teleport.announceTemplate = nil
         ns:OpenOptions()
     end)
 end
