@@ -160,13 +160,3 @@ Releases are cut through the Claude slash command at
 
 Nothing uploads to CurseForge/WoWInterface — those are manual uploads of the
 generated zip.
-
-## References
-
-Three sibling addons live at the repo root but are git-ignored. Study them,
-do not modify them:
-
-- `zMPlus/` — the original 4-file addon whose logic MythicPlusBox absorbed.
-- `Stats/` — the AceGUI settings panel we modelled Options.lua on.
-- `Details/` — where LibOpenRaid was extracted from and how `/key` is
-  structured.
