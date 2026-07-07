@@ -149,6 +149,22 @@ end
 -- inserted the instance transitions to the Mythic+ difficulty and knowing who
 -- else holds a key stops mattering. Normal / Heroic can't host a keystone.
 local MYTHIC_DIFFICULTY_ID = 23
+
+-- Lazily built instanceName -> mapID lookup. Only cached once every season
+-- map resolves a name, so an early call with partially-loaded map data
+-- retries on the next refresh instead of freezing an incomplete table.
+local mapIDByName
+local function GetMapIDByName()
+    if mapIDByName then return mapIDByName end
+    local lookup, complete = {}, true
+    for _, mapID in ipairs(ns.CurrentSeasonMapIDs or {}) do
+        local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
+        if mapName then lookup[mapName] = mapID else complete = false end
+    end
+    if complete then mapIDByName = lookup end
+    return lookup
+end
+
 local function ActiveMapID()
     if not (C_ChallengeMode and C_ChallengeMode.GetMapUIInfo) then return 0 end
     local instanceName, instanceType, difficultyID = GetInstanceInfo()
@@ -156,11 +172,7 @@ local function ActiveMapID()
         return 0
     end
     if difficultyID ~= MYTHIC_DIFFICULTY_ID then return 0 end
-    for _, mapID in ipairs(ns.CurrentSeasonMapIDs or {}) do
-        local mapName = C_ChallengeMode.GetMapUIInfo(mapID)
-        if mapName == instanceName then return mapID end
-    end
-    return 0
+    return GetMapIDByName()[instanceName] or 0
 end
 
 -- Collect the list of party members whose keystone matches the currently
@@ -297,7 +309,13 @@ function M:OnPlayerLogin()
     f:RegisterEvent("GROUP_ROSTER_UPDATE")
     f:SetScript("OnEvent", function(_, event)
         if event == "GROUP_ROSTER_UPDATE" then
+            -- Roster updates arrive in bursts while a group forms; debounce so
+            -- one settled update sends a single keystone comm request instead
+            -- of one per event.
+            if M._rosterPending then return end
+            M._rosterPending = true
             C_Timer.After(1, function()
+                M._rosterPending = nil
                 local l = GetLibOpenRaid()
                 if l and l.RequestKeystoneDataFromParty then
                     l.RequestKeystoneDataFromParty()

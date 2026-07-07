@@ -4,7 +4,6 @@ local M = {}
 ns:RegisterModule("weekly", M)
 
 M.rows = {}
-M.cache = { weekly = nil, season = nil }
 
 local function ColorClass(text)
     local _, class = UnitClass("player")
@@ -88,7 +87,11 @@ local function EnsureFrame()
     local relTo = _G[a.relativeTo] or PVEFrame
     f:SetPoint(a.point, relTo, a.relativePoint, a.x, a.y)
     if not PVEFrame:IsShown() then f:Hide() end
-    PVEFrame:HookScript("OnShow", function() if weekly.enabled then f:Show(); M:Update() end end)
+    -- Read config through ns.db at call time: a captured `weekly` table goes
+    -- stale after a profile switch (AceDB swaps the profile table).
+    PVEFrame:HookScript("OnShow", function()
+        if ns.db.profile.weekly.enabled then f:Show(); M:Update() end
+    end)
     PVEFrame:HookScript("OnHide", function() f:Hide() end)
     M.frame = f
     return f
@@ -180,11 +183,6 @@ local function BuildSeasonRows(runHistory)
     BuildDungeonStatsRows(runHistory, index)
 end
 
-function M:InvalidateCache()
-    self.cache.weekly = nil
-    self.cache.season = nil
-end
-
 function M:Update()
     local weekly = ns.db.profile.weekly
     local f = EnsureFrame()
@@ -223,7 +221,6 @@ function M:OnPlayerLogin()
                 M:Update()
             end
         else
-            M:InvalidateCache()
             C_Timer.After(1, function() M:Update() end)
         end
     end)
@@ -231,6 +228,5 @@ function M:OnPlayerLogin()
 end
 
 function M:Refresh()
-    self:InvalidateCache()
     self:Update()
 end

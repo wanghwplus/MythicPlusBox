@@ -21,10 +21,20 @@ local function SelectBestSpellID(spellIDs)
     return spellIDs[1]
 end
 
-local function UpdateTooltip(parent, spellID, initialize)
+-- Each OnEnter bumps the serial so only the newest refresh chain keeps
+-- rescheduling; stale chains from earlier hovers die off instead of stacking
+-- concurrent C_Timer loops against the same tooltip.
+local tooltipSerial = 0
+
+local function UpdateTooltip(parent, spellID, initialize, serial)
     if M.isLoadingScreen then return end
     local L = ns.L
-    if not initialize and not GameTooltip:IsOwned(parent) then return end
+    if initialize then
+        tooltipSerial = tooltipSerial + 1
+        serial = tooltipSerial
+    elseif serial ~= tooltipSerial or not GameTooltip:IsOwned(parent) then
+        return
+    end
     local onEnter = parent:GetScript("OnEnter")
     if onEnter then onEnter(parent) end
 
@@ -47,7 +57,7 @@ local function UpdateTooltip(parent, spellID, initialize)
     end
     GameTooltip:Show()
 
-    C_Timer.After(1, function() UpdateTooltip(parent, spellID) end)
+    C_Timer.After(1, function() UpdateTooltip(parent, spellID, false, serial) end)
 end
 
 local function CreateDungeonButton(icon, spellIDs)
@@ -60,9 +70,14 @@ local function CreateDungeonButton(icon, spellIDs)
     if not button then
         button = CreateFrame("Button", nil, icon, "InsecureActionButtonTemplate")
         button:SetAllPoints(icon)
-        button:RegisterForClicks("AnyDown", "AnyUp")
         icon.__MPBoxTeleport = button
     end
+    -- Registering both "AnyDown" and "AnyUp" fires the action twice per click
+    -- (down + up); the second activation restarts the teleport cast with a
+    -- fresh castGUID, which defeats the announce dedup and broadcasts twice.
+    -- Register only the click type matching the user's cvar. Re-applied on
+    -- every ChallengesFrame update so cvar changes are picked up.
+    button:RegisterForClicks(GetCVarBool("ActionButtonUseKeyDown") and "AnyDown" or "AnyUp")
     button:SetAttribute("type", "spell")
     button:SetAttribute("spell", spellID)
     button:SetScript("OnEnter", function() UpdateTooltip(icon, spellID, true) end)
@@ -122,9 +137,17 @@ function M:OnSpellCast(unit, spellID, castGUID)
     -- edge cases, self-cast frame refreshes). Dedup by castGUID so a single
     -- cast only broadcasts once.
     if castGUID and castGUID == self._lastCastGUID then return end
+    -- Defense in depth: a restarted cast carries a *new* castGUID (button
+    -- double-activation, instant re-cast after cancel), so also suppress the
+    -- same spell inside a short window. Teleport casts run ~10s, so 5s never
+    -- swallows a legitimate separate cast announcement.
+    local now = GetTime()
+    if self._lastSpellID == spellID and now - (self._lastAnnounceAt or 0) < 5 then return end
     local msg = self:GenerateMessage(spellID)
     if not msg then return end
     self._lastCastGUID = castGUID
+    self._lastSpellID = spellID
+    self._lastAnnounceAt = now
     if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
         SafeSendChatMessage(msg, "INSTANCE_CHAT")
     elseif IsInGroup() then
@@ -142,7 +165,9 @@ function M:OnPlayerLogin()
     f:RegisterEvent("ADDON_LOADED")
     f:RegisterEvent("LOADING_SCREEN_ENABLED")
     f:RegisterEvent("LOADING_SCREEN_DISABLED")
-    f:RegisterEvent("UNIT_SPELLCAST_START")
+    -- Unit-filtered registration: UNIT_SPELLCAST_START otherwise fires for
+    -- every party/raid/nameplate unit and runs this handler constantly.
+    f:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
     f:SetScript("OnEvent", function(_, event, arg1, castGUID, spellID)
         if event == "ADDON_LOADED" and arg1 == "Blizzard_ChallengesUI" then
             TryInit()

@@ -302,7 +302,13 @@ function M:OnPlayerLogin()
             M.inActiveRun = false
             M:Refresh()
         elseif event == "GROUP_ROSTER_UPDATE" then
+            -- Roster updates arrive in bursts while a group forms; debounce so
+            -- one settled update sends a single keystone comm request instead
+            -- of one per event.
+            if M._rosterPending then return end
+            M._rosterPending = true
             C_Timer.After(1, function()
+                M._rosterPending = nil
                 local l = GetLibOpenRaid()
                 if l and l.RequestKeystoneDataFromParty then
                     l.RequestKeystoneDataFromParty()
